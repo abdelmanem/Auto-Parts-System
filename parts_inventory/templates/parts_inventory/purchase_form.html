@@ -1,0 +1,230 @@
+{% extends 'base.html' %}
+
+{% block title %}إضافة عملية شراء جديدة - نظام إدارة قطع غيار السيارات{% endblock %}
+
+{% block content %}
+<div class="row mb-4">
+    <div class="col-12">
+        <div class="card shadow">
+            <div class="card-header bg-primary text-white">
+                <h5 class="mb-0"><i class="fas fa-shopping-basket me-2"></i>إضافة عملية شراء جديدة</h5>
+            </div>
+            <div class="card-body">
+                <form method="post" class="needs-validation" novalidate>
+                    {% csrf_token %}
+                    
+                    <!-- معلومات المورد -->
+                    <div class="row mb-4">
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="supplier" class="form-label">المورد <span class="text-danger">*</span></label>
+                                <div class="input-group">
+                                    <select class="form-select" id="supplier" name="supplier" required>
+                                        <option value="">-- اختر المورد --</option>
+                                        {% for supplier in suppliers %}
+                                        <option value="{{ supplier.id }}">{{ supplier.name }}</option>
+                                        {% endfor %}
+                                    </select>
+                                    <a href="{% url 'parts_inventory:supplier_form' %}" class="btn btn-success" target="_blank">
+                                        <i class="fas fa-plus"></i> إضافة مورد
+                                    </a>
+                                </div>
+                                {% if not suppliers %}
+                                <div class="alert alert-warning mt-2">
+                                    <i class="fas fa-exclamation-triangle me-2"></i>
+                                    لا يوجد موردين حالياً. يرجى <a href="{% url 'parts_inventory:supplier_form' %}" target="_blank">إضافة مورد جديد</a> أولاً.
+                                </div>
+                                {% endif %}
+                                <div class="invalid-feedback">يرجى اختيار المورد</div>
+                            </div>
+                            <div class="mb-3">
+                                <label for="invoice_number" class="form-label">رقم الفاتورة <span class="text-danger">*</span></label>
+                                <input type="text" class="form-control" id="invoice_number" name="invoice_number" required>
+                                <div class="invalid-feedback">يرجى إدخال رقم الفاتورة</div>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="purchase_date" class="form-label">تاريخ الشراء <span class="text-danger">*</span></label>
+                                <input type="date" class="form-control" id="purchase_date" name="purchase_date" required>
+                                <div class="invalid-feedback">يرجى اختيار تاريخ الشراء</div>
+                            </div>
+                            <div class="mb-3">
+                                <label for="payment_method" class="form-label">طريقة الدفع <span class="text-danger">*</span></label>
+                                <select class="form-select" id="payment_method" name="payment_method" required>
+                                    <option value="">-- اختر طريقة الدفع --</option>
+                                    <option value="cash">نقداً</option>
+                                    <option value="card">بطاقة ائتمان</option>
+                                    <option value="bank_transfer">تحويل بنكي</option>
+                                </select>
+                                <div class="invalid-feedback">يرجى اختيار طريقة الدفع</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- قطع الغيار المشتراة -->
+                    <div class="mb-4">
+                        <h6 class="mb-3">قطع الغيار المشتراة</h6>
+                        <div id="parts-container">
+                            <div class="row mb-3 part-row">
+                                <div class="col-md-4">
+                                    <select class="form-select" name="parts[]" required>
+                                        <option value="">-- اختر قطعة الغيار --</option>
+                                        {% for part in parts %}
+                                        <option value="{{ part.id }}" data-price="{{ part.purchase_price }}">{{ part.name }} - {{ part.part_number }}</option>
+                                        {% endfor %}
+                                    </select>
+                                </div>
+                                <div class="col-md-2">
+                                    <input type="number" class="form-control quantity-input" name="quantities[]" min="1" placeholder="الكمية" required>
+                                </div>
+                                <div class="col-md-2">
+                                    <input type="number" class="form-control price-input" name="prices[]" step="0.01" placeholder="السعر" required>
+                                </div>
+                                <div class="col-md-2">
+                                    <input type="number" class="form-control tax-input" name="taxes[]" step="0.01" value="0" min="0" placeholder="الضريبة">
+                                </div>
+                                <div class="col-md-2">
+                                    <button type="button" class="btn btn-danger remove-part"><i class="fas fa-trash"></i></button>
+                                </div>
+                            </div>
+                        </div>
+                        <button type="button" class="btn btn-success" id="add-part">
+                            <i class="fas fa-plus me-1"></i>إضافة قطعة غيار
+                        </button>
+                    </div>
+
+                    <!-- الإجماليات -->
+                    <div class="row mb-4">
+                        <div class="col-md-6 offset-md-6">
+                            <div class="card">
+                                <div class="card-body">
+                                    <div class="mb-3">
+                                        <label class="form-label">المبلغ الإجمالي</label>
+                                        <div class="input-group">
+                                            <input type="text" class="form-control" id="total_amount" name="total_amount" readonly>
+                                            <span class="input-group-text">جنيه مصري</span>
+                                        </div>
+                                    </div>
+                                    <div class="mb-3">
+                                        <label class="form-label">إجمالي الضرائب</label>
+                                        <div class="input-group">
+                                            <input type="text" class="form-control" id="total_tax" name="total_tax" readonly>
+                                            <span class="input-group-text">جنيه مصري</span>
+                                        </div>
+                                    </div>
+                                    <div class="mb-3">
+                                        <label class="form-label">المبلغ النهائي</label>
+                                        <div class="input-group">
+                                            <input type="text" class="form-control" id="final_amount" name="final_amount" readonly>
+                                            <span class="input-group-text">جنيه مصري</span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- ملاحظات -->
+                    <div class="mb-4">
+                        <label for="notes" class="form-label">ملاحظات</label>
+                        <textarea class="form-control" id="notes" name="notes" rows="3"></textarea>
+                    </div>
+
+                    <!-- أزرار التحكم -->
+                    <div class="text-end">
+                        <button type="button" class="btn btn-secondary" onclick="history.back()">إلغاء</button>
+                        <button type="submit" class="btn btn-primary">حفظ</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- سكريبت التحقق من صحة النموذج وحساب الإجماليات -->
+<script>
+(function () {
+    'use strict'
+
+    // التحقق من صحة النموذج
+    var forms = document.querySelectorAll('.needs-validation')
+    Array.prototype.slice.call(forms).forEach(function (form) {
+        form.addEventListener('submit', function (event) {
+            if (!form.checkValidity()) {
+                event.preventDefault()
+                event.stopPropagation()
+            }
+            form.classList.add('was-validated')
+        }, false)
+    })
+
+    // إضافة صف جديد لقطعة غيار
+    document.getElementById('add-part').addEventListener('click', function() {
+        var container = document.getElementById('parts-container')
+        var row = container.querySelector('.part-row').cloneNode(true)
+        row.querySelectorAll('input').forEach(input => input.value = '')
+        row.querySelector('select').selectedIndex = 0
+        container.appendChild(row)
+        updateRemoveButtons()
+        attachEventListeners(row)
+    })
+
+    // حذف صف قطعة غيار
+    function updateRemoveButtons() {
+        var removeButtons = document.querySelectorAll('.remove-part')
+        removeButtons.forEach(button => {
+            button.addEventListener('click', function() {
+                if (document.querySelectorAll('.part-row').length > 1) {
+                    this.closest('.part-row').remove()
+                    calculateTotals()
+                }
+            })
+        })
+    }
+
+    // إضافة مستمعي الأحداث للحقول
+    function attachEventListeners(row) {
+        var select = row.querySelector('select')
+        var quantityInput = row.querySelector('.quantity-input')
+        var priceInput = row.querySelector('.price-input')
+        var taxInput = row.querySelector('.tax-input')
+
+        select.addEventListener('change', function() {
+            var option = this.options[this.selectedIndex]
+            if (option.value) {
+                priceInput.value = option.dataset.price
+            }
+            calculateTotals()
+        })
+
+        ;[quantityInput, priceInput, taxInput].forEach(input => {
+            input.addEventListener('input', calculateTotals)
+        })
+    }
+
+    // حساب الإجماليات
+    function calculateTotals() {
+        var total = 0
+        var totalTax = 0
+        document.querySelectorAll('.part-row').forEach(row => {
+            var quantity = parseFloat(row.querySelector('.quantity-input').value) || 0
+            var price = parseFloat(row.querySelector('.price-input').value) || 0
+            var tax = parseFloat(row.querySelector('.tax-input').value) || 0
+            total += quantity * price
+            totalTax += tax
+        })
+
+        var finalAmount = total + totalTax
+
+        document.getElementById('total_amount').value = total.toFixed(2)
+        document.getElementById('total_tax').value = totalTax.toFixed(2)
+        document.getElementById('final_amount').value = finalAmount.toFixed(2)
+    }
+
+    // تهيئة مستمعي الأحداث للصف الأول
+    updateRemoveButtons()
+    document.querySelectorAll('.part-row').forEach(row => attachEventListeners(row))
+})()
+</script>
+{% endblock %}

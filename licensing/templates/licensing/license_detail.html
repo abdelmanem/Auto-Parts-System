@@ -1,0 +1,74 @@
+{% extends 'base.html' %}
+{% load i18n %}
+
+{% block title %}{% trans 'تفاصيل الترخيص' %}{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <div class="card">
+                <div class="card-header bg-primary text-white">
+                    <h4 class="mb-0">{% trans 'تفاصيل الترخيص' %}</h4>
+                </div>
+                <div class="card-body">
+                    <dl class="row">
+                        <dt class="col-sm-4">{% trans 'الشركة' %}</dt>
+                        <dd class="col-sm-8">{{ license.company_name }}</dd>
+
+                        <dt class="col-sm-4">{% trans 'مفتاح الترخيص' %}</dt>
+                        <dd class="col-sm-8">{{ license.license_key }}</dd>
+
+                        <dt class="col-sm-4">{% trans 'البريد الإلكتروني' %}</dt>
+                        <dd class="col-sm-8">{{ license.contact_email }}</dd>
+
+                        <dt class="col-sm-4">{% trans 'تاريخ البداية' %}</dt>
+                        <dd class="col-sm-8">{{ license.start_date }}</dd>
+
+                        <dt class="col-sm-4">{% trans 'تاريخ الانتهاء' %}</dt>
+                        <dd class="col-sm-8">{{ license.end_date }}</dd>
+
+                        <dt class="col-sm-4">{% trans 'الحالة' %}</dt>
+                        <dd class="col-sm-8">
+                            {% if license.is_active %}
+                            <span class="badge bg-success">{% trans 'نشط' %}</span>
+                            {% else %}
+                            <span class="badge bg-danger">{% trans 'غير نشط' %}</span>
+                            {% endif %}
+                        </dd>
+
+                        <dt class="col-sm-4">{% trans 'الأيام المتبقية' %}</dt>
+                        <dd class="col-sm-8">
+                            {% if license.is_expired %}
+                            <span class="badge bg-danger">{% trans 'منتهي' %}</span>
+                            {% else %}
+                            {{ license.days_until_expiry }} {% trans 'يوم' %}
+                            {% endif %}
+                        </dd>
+
+                        <dt class="col-sm-4">{% trans 'تاريخ الإنشاء' %}</dt>
+                        <dd class="col-sm-8">{{ license.created_at }}</dd>
+
+                        <dt class="col-sm-4">{% trans 'آخر تحديث' %}</dt>
+                        <dd class="col-sm-8">{{ license.updated_at }}</dd>
+
+                        <dt class="col-sm-4">{% trans 'تم الإنشاء بواسطة' %}</dt>
+                        <dd class="col-sm-8">{{ license.created_by }}</dd>
+                    </dl>
+
+                    <div class="d-flex justify-content-between mt-4">
+                        <a href="{% url 'licensing:license_list' %}" class="btn btn-secondary">
+                            <i class="fas fa-arrow-left"></i> {% trans 'عودة' %}
+                        </a>
+                        {% if perms.licensing.change_license %}
+                        <a href="{% url 'licensing:license_update' license.pk %}" class="btn btn-warning">
+                            <i class="fas fa-edit"></i> {% trans 'تعديل' %}
+                        </a>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

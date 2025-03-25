@@ -1,0 +1,144 @@
+{% extends 'base.html' %}
+
+{% block title %}قائمة الموردين - نظام إدارة قطع غيار السيارات{% endblock %}
+
+{% block content %}
+<div class="row mb-4">
+    <div class="col-12">
+        <div class="card shadow">
+            <div class="card-header bg-info text-white">
+                <h5 class="mb-0"><i class="fas fa-truck me-2"></i>قائمة الموردين</h5>
+            </div>
+            <div class="card-body">
+                <!-- نموذج البحث والفلترة -->
+                <form method="get" class="search-form mb-4">
+                    <div class="row g-3">
+                        <div class="col-md-4">
+                            <div class="input-group">
+                                <input type="text" name="q" class="form-control" placeholder="ابحث عن مورد..." value="{{ query }}">
+                                <button type="submit" class="btn btn-primary">
+                                    <i class="fas fa-search"></i>
+                                </button>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <select name="sort" class="form-select">
+                                <option value="name" {% if sort_by == 'name' %}selected{% endif %}>الاسم (تصاعدي)</option>
+                                <option value="-name" {% if sort_by == '-name' %}selected{% endif %}>الاسم (تنازلي)</option>
+                                <option value="country" {% if sort_by == 'country' %}selected{% endif %}>البلد</option>
+                                <option value="-created_at" {% if sort_by == '-created_at' %}selected{% endif %}>أحدث إضافة</option>
+                            </select>
+                        </div>
+                        <div class="col-md-1">
+                            <button type="reset" class="btn btn-outline-secondary w-100">
+                                <i class="fas fa-redo"></i>
+                            </button>
+                        </div>
+                    </div>
+                </form>
+                
+                <!-- جدول الموردين -->
+                {% if page_obj %}
+                <div class="table-responsive">
+                    <table class="table table-hover">
+                        <thead>
+                            <tr>
+                                <th>اسم الشركة</th>
+                                <th>الشخص المسؤول</th>
+                                <th>العنوان</th>
+                                <th>البريد الإلكتروني</th>
+                                <th>رقم الهاتف</th>
+                                <th>الإجراءات</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for supplier in page_obj %}
+                            <tr>
+                                <td>
+                                    <a href="{% url 'parts_inventory:supplier_detail' supplier.id %}">
+                                        {{ supplier.name }}
+                                    </a>
+                                </td>
+                                <td>{{ supplier.contact_person|default:"غير محدد" }}</td>
+                                <td>{{ supplier.address|default:"غير محدد" }}</td>
+                                <td>
+                                    {% if supplier.email %}
+                                    <a href="mailto:{{ supplier.email }}">{{ supplier.email }}</a>
+                                    {% else %}
+                                    غير محدد
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    {% if supplier.phone %}
+                                    <a href="tel:{{ supplier.phone }}">{{ supplier.phone }}</a>
+                                    {% else %}
+                                    غير محدد
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    <a href="{% url 'parts_inventory:supplier_detail' supplier.id %}" class="btn btn-sm btn-info me-1" title="عرض التفاصيل">
+                                        <i class="fas fa-eye"></i>
+                                    </a>
+                                    <a href="{% url 'parts_inventory:supplier_edit' supplier.id %}" class="btn btn-sm btn-warning" title="تعديل الشركة">
+                                        <i class="fas fa-edit"></i>
+                                    </a>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                
+                <!-- ترقيم الصفحات -->
+                {% if page_obj.has_other_pages %}
+                <nav aria-label="Page navigation" class="mt-4">
+                    <ul class="pagination justify-content-center">
+                        {% if page_obj.has_previous %}
+                        <li class="page-item">
+                            <a class="page-link" href="?page=1{% if query %}&q={{ query }}{% endif %}{% if sort_by %}&sort={{ sort_by }}{% endif %}" aria-label="First">
+                                <span aria-hidden="true">&laquo;&laquo;</span>
+                            </a>
+                        </li>
+                        <li class="page-item">
+                            <a class="page-link" href="?page={{ page_obj.previous_page_number }}{% if query %}&q={{ query }}{% endif %}{% if sort_by %}&sort={{ sort_by }}{% endif %}" aria-label="Previous">
+                                <span aria-hidden="true">&laquo;</span>
+                            </a>
+                        </li>
+                        {% endif %}
+                        
+                        {% for num in page_obj.paginator.page_range %}
+                            {% if page_obj.number == num %}
+                            <li class="page-item active"><span class="page-link">{{ num }}</span></li>
+                            {% elif num > page_obj.number|add:'-3' and num < page_obj.number|add:'3' %}
+                            <li class="page-item">
+                                <a class="page-link" href="?page={{ num }}{% if query %}&q={{ query }}{% endif %}{% if sort_by %}&sort={{ sort_by }}{% endif %}">{{ num }}</a>
+                            </li>
+                            {% endif %}
+                        {% endfor %}
+                        
+                        {% if page_obj.has_next %}
+                        <li class="page-item">
+                            <a class="page-link" href="?page={{ page_obj.next_page_number }}{% if query %}&q={{ query }}{% endif %}{% if sort_by %}&sort={{ sort_by }}{% endif %}" aria-label="Next">
+                                <span aria-hidden="true">&raquo;</span>
+                            </a>
+                        </li>
+                        <li class="page-item">
+                            <a class="page-link" href="?page={{ page_obj.paginator.num_pages }}{% if query %}&q={{ query }}{% endif %}{% if sort_by %}&sort={{ sort_by }}{% endif %}" aria-label="Last">
+                                <span aria-hidden="true">&raquo;&raquo;</span>
+                            </a>
+                        </li>
+                        {% endif %}
+                    </ul>
+                </nav>
+                {% endif %}
+                
+                {% else %}
+                <div class="alert alert-info">
+                    <i class="fas fa-info-circle me-2"></i>لا يوجد موردين متطابقين مع معايير البحث.
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

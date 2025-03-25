@@ -1,0 +1,271 @@
+{% extends 'base.html' %}
+
+{% block title %}ضرائب المبيعات - نظام إدارة قطع غيار السيارات{% endblock %}
+
+{% block content %}
+<div class="row mb-4">
+    <div class="col-12">
+        <nav aria-label="breadcrumb">
+            <ol class="breadcrumb">
+                <li class="breadcrumb-item"><a href="{% url 'parts_inventory:index' %}">الرئيسية</a></li>
+                <li class="breadcrumb-item"><a href="{% url 'parts_inventory:financial:dashboard' %}">النظام المالي</a></li>
+                <li class="breadcrumb-item"><a href="{% url 'parts_inventory:financial:tax_dashboard' %}">نظام الضرائب</a></li>
+                <li class="breadcrumb-item active">ضرائب المبيعات</li>
+            </ol>
+        </nav>
+    </div>
+</div>
+
+<div class="row mb-4">
+    <div class="col-12">
+        <div class="card shadow">
+            <div class="card-header bg-primary text-white">
+                <h5 class="mb-0"><i class="fas fa-file-invoice-dollar me-2"></i>ضرائب المبيعات</h5>
+            </div>
+            <div class="card-body">
+                <!-- نموذج البحث والفلترة -->
+                <form method="get" class="search-form mb-4">
+                    <div class="row g-3">
+                        <div class="col-md-3">
+                            <div class="input-group">
+                                <input type="text" name="q" class="form-control" placeholder="ابحث عن ضريبة..." value="{{ query }}">
+                                <button type="submit" class="btn btn-primary">
+                                    <i class="fas fa-search"></i>
+                                </button>
+                            </div>
+                        </div>
+                        <div class="col-md-2">
+                            <select name="is_paid" class="form-select">
+                                <option value="">-- حالة الدفع --</option>
+                                <option value="false" {% if is_paid == 'false' %}selected{% endif %}>غير مدفوعة</option>
+                                <option value="true" {% if is_paid == 'true' %}selected{% endif %}>مدفوعة</option>
+                            </select>
+                        </div>
+                        <div class="col-md-2">
+                            <input type="date" name="start_date" class="form-control" placeholder="من تاريخ" value="{{ start_date }}">
+                        </div>
+                        <div class="col-md-2">
+                            <input type="date" name="end_date" class="form-control" placeholder="إلى تاريخ" value="{{ end_date }}">
+                        </div>
+                        <div class="col-md-3">
+                            <a href="#" class="btn btn-success w-100" data-bs-toggle="modal" data-bs-target="#addSalesTaxModal">
+                                <i class="fas fa-plus me-1"></i> إضافة ضريبة مبيعات
+                            </a>
+                        </div>
+                    </div>
+                </form>
+                
+                <!-- جدول ضرائب المبيعات -->
+                {% if page_obj %}
+                <div class="table-responsive">
+                    <table class="table table-striped table-hover">
+                        <thead>
+                            <tr>
+                                <th>رقم الفاتورة</th>
+                                <th>تاريخ البيع</th>
+                                <th>العميل</th>
+                                <th>معدل الضريبة</th>
+                                <th>مبلغ الضريبة</th>
+                                <th>حالة الدفع</th>
+                                <th>تاريخ الدفع</th>
+                                <th>الإجراءات</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for tax in page_obj %}
+                            <tr>
+                                <td>{{ tax.sale.invoice_number }}</td>
+                                <td>{{ tax.sale.sale_date|date:"d/m/Y" }}</td>
+                                <td>{{ tax.sale.customer_name }}</td>
+                                <td>{{ tax.tax_rate.rate }}%</td>
+                                <td>{{ tax.tax_amount|floatformat:2 }} ج.م</td>
+                                <td>
+                                    {% if tax.is_paid %}
+                                    <span class="badge bg-success">مدفوعة</span>
+                                    {% else %}
+                                    <span class="badge bg-danger">غير مدفوعة</span>
+                                    {% endif %}
+                                </td>
+                                <td>{{ tax.payment_date|date:"d/m/Y"|default:"--" }}</td>
+                                <td>
+                                    <div class="btn-group btn-group-sm">
+                                        <a href="#" class="btn btn-info" title="عرض التفاصيل" data-bs-toggle="modal" data-bs-target="#viewTaxModal{{ tax.id }}">
+                                            <i class="fas fa-eye"></i>
+                                        </a>
+                                        <a href="#" class="btn btn-warning" title="تعديل" data-bs-toggle="modal" data-bs-target="#editTaxModal{{ tax.id }}">
+                                            <i class="fas fa-edit"></i>
+                                        </a>
+                                        {% if not tax.is_paid %}
+                                        <a href="#" class="btn btn-success" title="تسجيل دفع" data-bs-toggle="modal" data-bs-target="#markAsPaidModal{{ tax.id }}">
+                                            <i class="fas fa-check"></i>
+                                        </a>
+                                        {% endif %}
+                                    </div>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                
+                <!-- التصفح -->
+                {% include 'parts_inventory/includes/pagination.html' %}
+                {% else %}
+                <div class="alert alert-info">
+                    <i class="fas fa-info-circle me-2"></i> لا توجد ضرائب مبيعات مطابقة للبحث.
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- نموذج إضافة ضريبة مبيعات -->
+<div class="modal fade" id="addSalesTaxModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header bg-success text-white">
+                <h5 class="modal-title"><i class="fas fa-plus-circle me-2"></i>إضافة ضريبة مبيعات جديدة</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <form method="post" action="{% url 'parts_inventory:financial:add_sales_tax' %}">
+                {% csrf_token %}
+                <div class="modal-body">
+                    <!-- هنا يتم إضافة حقول نموذج إضافة ضريبة المبيعات -->
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <label class="form-label">عملية البيع</label>
+                            <select name="sale" class="form-select" required>
+                                <option value="">-- اختر عملية البيع --</option>
+                                {% for sale in available_sales %}
+                                <option value="{{ sale.id }}">{{ sale.invoice_number }} - {{ sale.customer_name }} - {{ sale.final_amount|floatformat:2 }} ج.م</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">معدل الضريبة</label>
+                            <select name="tax_rate" class="form-select" required>
+                                <option value="">-- اختر معدل الضريبة --</option>
+                                {% for tax_rate in active_tax_rates %}
+                                <option value="{{ tax_rate.id }}">{{ tax_rate.name }} ({{ tax_rate.rate }}%)</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                    </div>
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <label class="form-label">مبلغ الضريبة</label>
+                            <div class="input-group">
+                                <input type="number" name="tax_amount" class="form-control" step="0.01" min="0" required>
+                                <span class="input-group-text">ج.م</span>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">حالة الدفع</label>
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" name="is_paid" id="isPaid">
+                                <label class="form-check-label" for="isPaid">تم دفع الضريبة</label>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="row mb-3" id="paymentDateRow">
+                        <div class="col-md-6">
+                            <label class="form-label">تاريخ الدفع</label>
+                            <input type="date" name="payment_date" class="form-control">
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">رقم المرجع</label>
+                            <input type="text" name="reference_number" class="form-control">
+                        </div>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">ملاحظات</label>
+                        <textarea name="notes" class="form-control" rows="3"></textarea>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">إلغاء</button>
+                    <button type="submit" class="btn btn-success">حفظ</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const isPaidCheckbox = document.getElementById('isPaid');
+    const paymentDateRow = document.getElementById('paymentDateRow');
+
+    function togglePaymentFields() {
+        if (isPaidCheckbox.checked) {
+            paymentDateRow.style.display = 'flex';
+        } else {
+            paymentDateRow.style.display = 'none';
+        }
+    }
+
+    isPaidCheckbox.addEventListener('change', togglePaymentFields);
+    togglePaymentFields(); // تطبيق الحالة الأولية
+});
+</script>
+
+<!-- نماذج عرض وتعديل وتسجيل دفع ضرائب المبيعات -->
+{% for tax in page_obj %}
+<!-- نموذج عرض تفاصيل الضريبة -->
+<div class="modal fade" id="viewTaxModal{{ tax.id }}" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header bg-info text-white">
+                <h5 class="modal-title"><i class="fas fa-info-circle me-2"></i>تفاصيل ضريبة المبيعات</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <div class="row mb-3">
+                    <div class="col-md-6">
+                        <p class="mb-1 text-muted">رقم الفاتورة:</p>
+                        <p class="fw-bold">{{ tax.sale.invoice_number }}</p>
+                    </div>
+                    <div class="col-md-6">
+                        <p class="mb-1 text-muted">تاريخ البيع:</p>
+                        <p class="fw-bold">{{ tax.sale.sale_date|date:"d/m/Y" }}</p>
+                    </div>
+                </div>
+                <div class="row mb-3">
+                    <div class="col-md-6">
+                        <p class="mb-1 text-muted">العميل:</p>
+                        <p class="fw-bold">{{ tax.sale.customer_name }}</p>
+                    </div>
+                    <div class="col-md-6">
+                        <p class="mb-1 text-muted">معدل الضريبة:</p>
+                        <p class="fw-bold">{{ tax.tax_rate.name }} ({{ tax.tax_rate.rate }}%)</p>
+                    </div>
+                </div>
+                <div class="row mb-3">
+                    <div class="col-md-6">
+                        <p class="mb-1 text-muted">مبلغ الضريبة:</p>
+                        <p class="fw-bold">{{ tax.tax_amount|floatformat:2 }} ج.م</p>
+                    </div>
+                    <div class="col-md-6">
+                        <p class="mb-1 text-muted">حالة الدفع:</p>
+                        <p class="fw-bold">
+                            {% if tax.is_paid %}
+                            <span class="badge bg-success">مدفوعة</span>
+                            {% else %}
+                            <span class="badge bg-danger">غير مدفوعة</span>
+                            {% endif %}
+                        </p>
+                    </div>
+                </div>
+                {% if tax.is_paid %}
+                <div class="row mb-3">
+                    <div class="col-md-6">
+                        <p class="mb-1 text-muted">تاريخ الدفع:</p>
+                        <p class="fw-bold">{{ tax.payment_date|date:"d/m/Y" }}</p>
+                    </div>
+                    <div class="col-md-6">
+                        <p class="mb-1 text-muted">رقم المرجع:</p>
+                        <p class="fw-bold">{{ tax.reference_number|default:"--" }}</p>
+                    </div>
+                </div>
+                {% endif %}

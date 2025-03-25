@@ -1,0 +1,115 @@
+{% extends 'base.html' %}
+
+{% block title %}تحديث حالة التقرير الضريبي - نظام إدارة قطع غيار السيارات{% endblock %}
+
+{% block content %}
+<div class="row mb-4">
+    <div class="col-12">
+        <nav aria-label="breadcrumb">
+            <ol class="breadcrumb">
+                <li class="breadcrumb-item"><a href="{% url 'parts_inventory:index' %}">الرئيسية</a></li>
+                <li class="breadcrumb-item"><a href="{% url 'parts_inventory:financial:dashboard' %}">النظام المالي</a></li>
+                <li class="breadcrumb-item"><a href="{% url 'parts_inventory:financial:tax_dashboard' %}">نظام الضرائب</a></li>
+                <li class="breadcrumb-item"><a href="{% url 'parts_inventory:financial:tax_reports_list' %}">التقارير الضريبية</a></li>
+                <li class="breadcrumb-item"><a href="{% url 'parts_inventory:financial:tax_report_detail' tax_report.id %}">تفاصيل التقرير</a></li>
+                <li class="breadcrumb-item active">تحديث الحالة</li>
+            </ol>
+        </nav>
+    </div>
+</div>
+
+<div class="row mb-4">
+    <div class="col-12">
+        <div class="card shadow">
+            <div class="card-header bg-primary text-white">
+                <h5 class="mb-0"><i class="fas fa-edit me-2"></i>تحديث حالة التقرير الضريبي</h5>
+            </div>
+            <div class="card-body">
+                <div class="row mb-4">
+                    <div class="col-md-6">
+                        <div class="card h-100">
+                            <div class="card-header bg-light">
+                                <h6 class="mb-0">معلومات التقرير</h6>
+                            </div>
+                            <div class="card-body">
+                                <div class="row mb-2">
+                                    <div class="col-md-4 fw-bold">نوع التقرير:</div>
+                                    <div class="col-md-8">{{ tax_report.get_report_type_display }}</div>
+                                </div>
+                                <div class="row mb-2">
+                                    <div class="col-md-4 fw-bold">الفترة:</div>
+                                    <div class="col-md-8">{{ tax_report.start_date|date:"d/m/Y" }} - {{ tax_report.end_date|date:"d/m/Y" }}</div>
+                                </div>
+                                <div class="row mb-2">
+                                    <div class="col-md-4 fw-bold">الحالة الحالية:</div>
+                                    <div class="col-md-8">
+                                        {% if tax_report.status == 'draft' %}
+                                        <span class="badge bg-secondary">مسودة</span>
+                                        {% elif tax_report.status == 'submitted' %}
+                                        <span class="badge bg-primary">تم التقديم</span>
+                                        {% elif tax_report.status == 'accepted' %}
+                                        <span class="badge bg-success">مقبول</span>
+                                        {% elif tax_report.status == 'rejected' %}
+                                        <span class="badge bg-danger">مرفوض</span>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                                <div class="row mb-2">
+                                    <div class="col-md-4 fw-bold">إجمالي ضرائب المبيعات:</div>
+                                    <div class="col-md-8">{{ tax_report.total_sales_tax|floatformat:2 }} ج.م</div>
+                                </div>
+                                <div class="row mb-2">
+                                    <div class="col-md-4 fw-bold">إجمالي ضرائب المشتريات:</div>
+                                    <div class="col-md-8">{{ tax_report.total_purchase_tax|floatformat:2 }} ج.م</div>
+                                </div>
+                                <div class="row mb-2">
+                                    <div class="col-md-4 fw-bold">الضريبة المستحقة:</div>
+                                    <div class="col-md-8 {% if tax_report.tax_due > 0 %}text-danger{% else %}text-success{% endif %} fw-bold">
+                                        {{ tax_report.tax_due|floatformat:2 }} ج.م
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="card h-100">
+                            <div class="card-header bg-light">
+                                <h6 class="mb-0">تحديث الحالة</h6>
+                            </div>
+                            <div class="card-body">
+                                <form method="post" action="{% url 'parts_inventory:financial:update_tax_report_status' tax_report.id %}">
+                                    {% csrf_token %}
+                                    <div class="mb-3">
+                                        <label class="form-label">الحالة الجديدة</label>
+                                        <select name="status" class="form-select" required>
+                                            {% for status_code, status_name in statuses %}
+                                            <option value="{{ status_code }}" {% if tax_report.status == status_code %}selected{% endif %}>{{ status_name }}</option>
+                                            {% endfor %}
+                                        </select>
+                                    </div>
+                                    <div class="mb-3">
+                                        <label class="form-label">رقم المرجع</label>
+                                        <input type="text" name="reference_number" class="form-control" value="{{ tax_report.reference_number }}">
+                                        <div class="form-text">رقم مرجع التقرير الضريبي لدى الجهات الرسمية</div>
+                                    </div>
+                                    <div class="mb-3">
+                                        <label class="form-label">ملاحظات</label>
+                                        <textarea name="notes" class="form-control" rows="4">{{ tax_report.notes }}</textarea>
+                                    </div>
+                                    <div class="alert alert-info">
+                                        <i class="fas fa-info-circle me-2"></i> عند تغيير الحالة إلى "تم التقديم"، سيتم تسجيل تاريخ اليوم كتاريخ تقديم التقرير تلقائيًا إذا لم يكن هناك تاريخ تقديم مسجل مسبقًا.
+                                    </div>
+                                    <div class="d-grid gap-2 d-md-flex justify-content-md-end">
+                                        <a href="{% url 'parts_inventory:financial:tax_report_detail' tax_report.id %}" class="btn btn-secondary">إلغاء</a>
+                                        <button type="submit" class="btn btn-primary">حفظ التغييرات</button>
+                                    </div>
+                                </form>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

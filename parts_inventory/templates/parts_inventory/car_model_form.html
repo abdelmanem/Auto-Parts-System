@@ -1,0 +1,97 @@
+{% extends 'base.html' %}
+
+{% block title %}إضافة موديل سيارة جديد - نظام إدارة قطع غيار السيارات{% endblock %}
+
+{% block content %}
+<div class="row mb-4">
+    <div class="col-12">
+        <div class="card shadow">
+            <div class="card-header bg-primary text-white">
+                <h5 class="mb-0"><i class="fas fa-car me-2"></i>إضافة موديل سيارة جديد</h5>
+            </div>
+            <div class="card-body">
+                <form method="post" class="needs-validation" novalidate enctype="multipart/form-data">
+                    {% csrf_token %}
+                    
+                    <!-- معلومات موديل السيارة -->
+                    <div class="row mb-4">
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="name" class="form-label">اسم الموديل <span class="text-danger">*</span></label>
+                                <input type="text" class="form-control" id="name" name="name" required>
+                                <div class="invalid-feedback">يرجى إدخال اسم الموديل</div>
+                            </div>
+                            <div class="mb-3">
+                                <label for="manufacturer" class="form-label">الشركة المصنعة <span class="text-danger">*</span></label>
+                                <select class="form-select" id="manufacturer" name="manufacturer" required>
+                                    <option value="">-- اختر الشركة المصنعة --</option>
+                                    {% for manufacturer in manufacturers %}
+                                    <option value="{{ manufacturer.id }}">{{ manufacturer.name }}</option>
+                                    {% endfor %}
+                                </select>
+                                <div class="invalid-feedback">يرجى اختيار الشركة المصنعة</div>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="year_from" class="form-label">سنة البداية <span class="text-danger">*</span></label>
+                                <input type="number" class="form-control" id="year_from" name="year_from" min="1900" max="2100" required>
+                                <div class="invalid-feedback">يرجى إدخال سنة البداية</div>
+                            </div>
+                            <div class="mb-3">
+                                <label for="year_to" class="form-label">سنة النهاية</label>
+                                <input type="number" class="form-control" id="year_to" name="year_to" min="1900" max="2100">
+                                <div class="form-text">اتركه فارغاً إذا كان الموديل ما زال مستمراً</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- صورة الموديل -->
+                    <div class="mb-4">
+                        <label for="image" class="form-label">صورة الموديل</label>
+                        <input type="file" class="form-control" id="image" name="image" accept="image/*">
+                        <div class="form-text">يمكنك رفع صورة بصيغة JPG، PNG، أو GIF</div>
+                    </div>
+
+                    <!-- أزرار التحكم -->
+                    <div class="text-end">
+                        <button type="button" class="btn btn-secondary" onclick="history.back()">إلغاء</button>
+                        <button type="submit" class="btn btn-primary">حفظ</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- سكريبت التحقق من صحة النموذج -->
+<script>
+(function () {
+    'use strict'
+
+    // التحقق من صحة النموذج
+    var forms = document.querySelectorAll('.needs-validation')
+    Array.prototype.slice.call(forms).forEach(function (form) {
+        form.addEventListener('submit', function (event) {
+            if (!form.checkValidity()) {
+                event.preventDefault()
+                event.stopPropagation()
+            }
+            form.classList.add('was-validated')
+        }, false)
+    })
+
+    // التحقق من صحة سنة النهاية
+    document.getElementById('year_to').addEventListener('input', function() {
+        var yearFrom = parseInt(document.getElementById('year_from').value)
+        var yearTo = parseInt(this.value)
+        
+        if (yearTo && yearFrom && yearTo < yearFrom) {
+            this.setCustomValidity('سنة النهاية يجب أن تكون أكبر من سنة البداية')
+        } else {
+            this.setCustomValidity('')
+        }
+    })
+})();
+</script>
+{% endblock %}

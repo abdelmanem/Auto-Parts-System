@@ -1,0 +1,86 @@
+{% extends 'base.html' %}
+
+{% block title %}إنشاء تقرير ضريبي جديد - نظام إدارة قطع غيار السيارات{% endblock %}
+
+{% block content %}
+<div class="row mb-4">
+    <div class="col-12">
+        <nav aria-label="breadcrumb">
+            <ol class="breadcrumb">
+                <li class="breadcrumb-item"><a href="{% url 'parts_inventory:index' %}">الرئيسية</a></li>
+                <li class="breadcrumb-item"><a href="{% url 'parts_inventory:financial:dashboard' %}">النظام المالي</a></li>
+                <li class="breadcrumb-item"><a href="{% url 'parts_inventory:financial:tax_dashboard' %}">نظام الضرائب</a></li>
+                <li class="breadcrumb-item"><a href="{% url 'parts_inventory:financial:tax_reports_list' %}">التقارير الضريبية</a></li>
+                <li class="breadcrumb-item active">إنشاء تقرير جديد</li>
+            </ol>
+        </nav>
+    </div>
+</div>
+
+<div class="row mb-4">
+    <div class="col-12">
+        <div class="card shadow">
+            <div class="card-header bg-primary text-white">
+                <h5 class="mb-0"><i class="fas fa-plus-circle me-2"></i>إنشاء تقرير ضريبي جديد</h5>
+            </div>
+            <div class="card-body">
+                <form method="post" action="{% url 'parts_inventory:financial:generate_tax_report' %}">
+                    {% csrf_token %}
+                    <div class="row mb-4">
+                        <div class="col-md-6">
+                            <div class="card h-100">
+                                <div class="card-header bg-light">
+                                    <h6 class="mb-0">معلومات التقرير</h6>
+                                </div>
+                                <div class="card-body">
+                                    <div class="mb-3">
+                                        <label class="form-label">نوع التقرير</label>
+                                        <select name="report_type" class="form-select" required>
+                                            {% for type_code, type_name in report_types %}
+                                            <option value="{{ type_code }}">{{ type_name }}</option>
+                                            {% endfor %}
+                                        </select>
+                                    </div>
+                                    <div class="mb-3">
+                                        <label class="form-label">تاريخ البداية</label>
+                                        <input type="date" name="start_date" class="form-control" required>
+                                    </div>
+                                    <div class="mb-3">
+                                        <label class="form-label">تاريخ النهاية</label>
+                                        <input type="date" name="end_date" class="form-control" value="{{ today|date:'Y-m-d' }}" required>
+                                    </div>
+                                    <div class="mb-3">
+                                        <label class="form-label">ملاحظات</label>
+                                        <textarea name="notes" class="form-control" rows="3"></textarea>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="card h-100">
+                                <div class="card-header bg-light">
+                                    <h6 class="mb-0">معلومات مساعدة</h6>
+                                </div>
+                                <div class="card-body">
+                                    <div class="alert alert-info">
+                                        <h6><i class="fas fa-info-circle me-2"></i>كيفية إنشاء تقرير ضريبي</h6>
+                                        <p>يتم إنشاء التقرير الضريبي بناءً على ضرائب المبيعات والمشتريات المسجلة في النظام خلال الفترة المحددة.</p>
+                                        <ul>
+                                            <li>التقرير الشهري: يغطي شهر واحد من بدايته إلى نهايته.</li>
+                                            <li>التقرير الربع سنوي: يغطي ثلاثة أشهر متتالية.</li>
+                                            <li>التقرير السنوي: يغطي سنة كاملة.</li>
+                                            <li>التقرير المخصص: يمكنك تحديد فترة مخصصة.</li>
+                                        </ul>
+                                        <p>سيقوم النظام تلقائيًا بحساب:</p>
+                                        <ul>
+                                            <li>إجمالي ضرائب المبيعات خلال الفترة المحددة.</li>
+                                            <li>إجمالي ضرائب المشتريات القابلة للخصم خلال الفترة المحددة.</li>
+                                            <li>الضريبة المستحقة (الفرق بين ضرائب المبيعات والمشتريات).</li>
+                                        </ul>
+                                    </div>
+                                    <div class="alert alert-warning">
+                                        <h6><i class="fas fa-exclamation-triangle me-2"></i>ملاحظة هامة</h6>
+                                        <p>تأكد من تسجيل جميع ضرائب المبيعات والمشتريات للفترة المحددة قبل إنشاء التقرير.</p>
+                                    </div>
+                                </div>
+                            </div

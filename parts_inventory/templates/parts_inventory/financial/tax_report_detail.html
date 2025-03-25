@@ -1,0 +1,239 @@
+{% extends 'base.html' %}
+
+{% block title %}تفاصيل التقرير الضريبي - نظام إدارة قطع غيار السيارات{% endblock %}
+
+{% block content %}
+<div class="row mb-4">
+    <div class="col-12">
+        <nav aria-label="breadcrumb">
+            <ol class="breadcrumb">
+                <li class="breadcrumb-item"><a href="{% url 'parts_inventory:index' %}">الرئيسية</a></li>
+                <li class="breadcrumb-item"><a href="{% url 'parts_inventory:financial:dashboard' %}">النظام المالي</a></li>
+                <li class="breadcrumb-item"><a href="{% url 'parts_inventory:financial:tax_dashboard' %}">نظام الضرائب</a></li>
+                <li class="breadcrumb-item"><a href="{% url 'parts_inventory:financial:tax_reports_list' %}">التقارير الضريبية</a></li>
+                <li class="breadcrumb-item active">تفاصيل التقرير</li>
+            </ol>
+        </nav>
+    </div>
+</div>
+
+<div class="row mb-4">
+    <div class="col-12">
+        <div class="card shadow">
+            <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center">
+                <h5 class="mb-0"><i class="fas fa-file-alt me-2"></i>تفاصيل التقرير الضريبي</h5>
+                <div>
+                    <a href="{% url 'parts_inventory:financial:update_tax_report_status' tax_report.id %}" class="btn btn-light btn-sm">
+                        <i class="fas fa-edit me-1"></i> تحديث الحالة
+                    </a>
+                    <a href="#" class="btn btn-light btn-sm" onclick="window.print();">
+                        <i class="fas fa-print me-1"></i> طباعة
+                    </a>
+                </div>
+            </div>
+            <div class="card-body">
+                <div class="row mb-4">
+                    <div class="col-md-6">
+                        <div class="card h-100">
+                            <div class="card-header bg-light">
+                                <h6 class="mb-0">معلومات التقرير</h6>
+                            </div>
+                            <div class="card-body">
+                                <div class="row mb-2">
+                                    <div class="col-md-4 fw-bold">نوع التقرير:</div>
+                                    <div class="col-md-8">{{ tax_report.get_report_type_display }}</div>
+                                </div>
+                                <div class="row mb-2">
+                                    <div class="col-md-4 fw-bold">الفترة:</div>
+                                    <div class="col-md-8">{{ tax_report.start_date|date:"d/m/Y" }} - {{ tax_report.end_date|date:"d/m/Y" }}</div>
+                                </div>
+                                <div class="row mb-2">
+                                    <div class="col-md-4 fw-bold">حالة التقرير:</div>
+                                    <div class="col-md-8">
+                                        {% if tax_report.status == 'draft' %}
+                                        <span class="badge bg-secondary">مسودة</span>
+                                        {% elif tax_report.status == 'submitted' %}
+                                        <span class="badge bg-primary">تم التقديم</span>
+                                        {% elif tax_report.status == 'accepted' %}
+                                        <span class="badge bg-success">مقبول</span>
+                                        {% elif tax_report.status == 'rejected' %}
+                                        <span class="badge bg-danger">مرفوض</span>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                                <div class="row mb-2">
+                                    <div class="col-md-4 fw-bold">تاريخ التقديم:</div>
+                                    <div class="col-md-8">{{ tax_report.submission_date|date:"d/m/Y"|default:"--" }}</div>
+                                </div>
+                                <div class="row mb-2">
+                                    <div class="col-md-4 fw-bold">رقم المرجع:</div>
+                                    <div class="col-md-8">{{ tax_report.reference_number|default:"--" }}</div>
+                                </div>
+                                <div class="row mb-2">
+                                    <div class="col-md-4 fw-bold">تاريخ الإنشاء:</div>
+                                    <div class="col-md-8">{{ tax_report.created_at|date:"d/m/Y H:i" }}</div>
+                                </div>
+                                <div class="row mb-2">
+                                    <div class="col-md-4 fw-bold">بواسطة:</div>
+                                    <div class="col-md-8">{{ tax_report.created_by.get_full_name|default:tax_report.created_by.username }}</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="card h-100">
+                            <div class="card-header bg-light">
+                                <h6 class="mb-0">ملخص الضرائب</h6>
+                            </div>
+                            <div class="card-body">
+                                <div class="row mb-3">
+                                    <div class="col-md-6">
+                                        <div class="card bg-light">
+                                            <div class="card-body text-center">
+                                                <h6>إجمالي ضرائب المبيعات</h6>
+                                                <h3 class="text-primary">{{ tax_report.total_sales_tax|floatformat:2 }} ج.م</h3>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <div class="card bg-light">
+                                            <div class="card-body text-center">
+                                                <h6>إجمالي ضرائب المشتريات</h6>
+                                                <h3 class="text-success">{{ tax_report.total_purchase_tax|floatformat:2 }} ج.م</h3>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="card bg-light mb-3">
+                                    <div class="card-body text-center">
+                                        <h6>الضريبة المستحقة</h6>
+                                        <h3 class="{% if tax_report.tax_due > 0 %}text-danger{% else %}text-success{% endif %}">
+                                            {{ tax_report.tax_due|floatformat:2 }} ج.م
+                                        </h3>
+                                    </div>
+                                </div>
+                                {% if tax_report.notes %}
+                                <div class="card bg-light">
+                                    <div class="card-body">
+                                        <h6>ملاحظات:</h6>
+                                        <p class="mb-0">{{ tax_report.notes }}</p>
+                                    </div>
+                                </div>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- تفاصيل ضرائب المبيعات -->
+                <div class="card mb-4">
+                    <div class="card-header bg-primary text-white">
+                        <h5 class="mb-0"><i class="fas fa-shopping-cart me-2"></i>ضرائب المبيعات</h5>
+                    </div>
+                    <div class="card-body">
+                        {% if sales_taxes %}
+                        <div class="table-responsive">
+                            <table class="table table-striped table-hover">
+                                <thead>
+                                    <tr>
+                                        <th>رقم الفاتورة</th>
+                                        <th>تاريخ البيع</th>
+                                        <th>العميل</th>
+                                        <th>معدل الضريبة</th>
+                                        <th>مبلغ الضريبة</th>
+                                        <th>حالة الدفع</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for tax in sales_taxes %}
+                                    <tr>
+                                        <td>{{ tax.sale.invoice_number }}</td>
+                                        <td>{{ tax.sale.sale_date|date:"d/m/Y" }}</td>
+                                        <td>{{ tax.sale.customer_name }}</td>
+                                        <td>{{ tax.tax_rate.rate }}%</td>
+                                        <td>{{ tax.tax_amount|floatformat:2 }} ج.م</td>
+                                        <td>
+                                            {% if tax.is_paid %}
+                                            <span class="badge bg-success">مدفوعة</span>
+                                            {% else %}
+                                            <span class="badge bg-danger">غير مدفوعة</span>
+                                            {% endif %}
+                                        </td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                                <tfoot>
+                                    <tr class="table-primary">
+                                        <th colspan="4">الإجمالي</th>
+                                        <th>{{ tax_report.total_sales_tax|floatformat:2 }} ج.م</th>
+                                        <th></th>
+                                    </tr>
+                                </tfoot>
+                            </table>
+                        </div>
+                        {% else %}
+                        <div class="alert alert-info">
+                            <i class="fas fa-info-circle me-2"></i> لا توجد ضرائب مبيعات في هذه الفترة.
+                        </div>
+                        {% endif %}
+                    </div>
+                </div>
+                
+                <!-- تفاصيل ضرائب المشتريات -->
+                <div class="card">
+                    <div class="card-header bg-success text-white">
+                        <h5 class="mb-0"><i class="fas fa-shopping-basket me-2"></i>ضرائب المشتريات (القابلة للخصم)</h5>
+                    </div>
+                    <div class="card-body">
+                        {% if purchase_taxes %}
+                        <div class="table-responsive">
+                            <table class="table table-striped table-hover">
+                                <thead>
+                                    <tr>
+                                        <th>رقم المرجع</th>
+                                        <th>تاريخ الشراء</th>
+                                        <th>المورد</th>
+                                        <th>معدل الضريبة</th>
+                                        <th>مبلغ الضريبة</th>
+                                        <th>حالة المطالبة</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for tax in purchase_taxes %}
+                                    <tr>
+                                        <td>{{ tax.purchase.reference_number }}</td>
+                                        <td>{{ tax.purchase.purchase_date|date:"d/m/Y" }}</td>
+                                        <td>{{ tax.purchase.supplier_name }}</td>
+                                        <td>{{ tax.tax_rate.rate }}%</td>
+                                        <td>{{ tax.tax_amount|floatformat:2 }} ج.م</td>
+                                        <td>
+                                            {% if tax.is_claimed %}
+                                            <span class="badge bg-success">تم المطالبة</span>
+                                            {% else %}
+                                            <span class="badge bg-warning text-dark">غير مطالب بها</span>
+                                            {% endif %}
+                                        </td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                                <tfoot>
+                                    <tr class="table-success">
+                                        <th colspan="4">الإجمالي</th>
+                                        <th>{{ tax_report.total_purchase_tax|floatformat:2 }} ج.م</th>
+                                        <th></th>
+                                    </tr>
+                                </tfoot>
+                            </table>
+                        </div>
+                        {% else %}
+                        <div class="alert alert-info">
+                            <i class="fas fa-info-circle me-2"></i> لا توجد ضرائب مشتريات قابلة للخصم في هذه الفترة.
+                        </div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

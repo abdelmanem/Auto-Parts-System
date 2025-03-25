@@ -1,0 +1,350 @@
+{% extends 'base.html' %}
+
+{% block title %}إضافة عملية بيع جديدة - نظام إدارة قطع غيار السيارات{% endblock %}
+
+{% block content %}
+<div class="row mb-4">
+    <div class="col-12">
+        <div class="card shadow">
+            <div class="card-header bg-primary text-white">
+                <h5 class="mb-0"><i class="fas fa-shopping-cart me-2"></i>إضافة عملية بيع جديدة</h5>
+            </div>
+            <div class="card-body">
+                <form method="post" class="needs-validation" novalidate>
+                    {% csrf_token %}
+                    
+                    <!-- معلومات العميل -->
+                    <div class="row mb-4">
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="invoice_number" class="form-label">رقم الفاتورة</label>
+                                <input type="text" class="form-control" id="invoice_number" name="invoice_number" readonly>
+                            </div>
+                            <div class="mb-3">
+                                <label for="customer_name" class="form-label">اسم العميل <span class="text-danger">*</span></label>
+                                <input type="text" class="form-control" id="customer_name" name="customer_name" required>
+                                <div class="invalid-feedback">يرجى إدخال اسم العميل</div>
+                            </div>
+                            <div class="mb-3">
+                                <label for="customer_phone" class="form-label">رقم الهاتف</label>
+                                <input type="tel" class="form-control" id="customer_phone" name="customer_phone">
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="sale_date" class="form-label">تاريخ البيع <span class="text-danger">*</span></label>
+                                <input type="date" class="form-control" id="sale_date" name="sale_date" required>
+                                <div class="invalid-feedback">يرجى اختيار تاريخ البيع</div>
+                            </div>
+                            <div class="mb-3">
+                                <label for="status" class="form-label">الحالة <span class="text-danger">*</span></label>
+                                <select class="form-select" id="status" name="status" required>
+                                    <option value="pending" selected>قيد الانتظار</option>
+                                    <option value="completed">مكتمل</option>
+                                    <option value="cancelled">ملغي</option>
+                                </select>
+                                <div class="invalid-feedback">يرجى اختيار حالة عملية البيع</div>
+                            </div>
+                            <div class="mb-3">
+                                <label for="payment_method" class="form-label">طريقة الدفع <span class="text-danger">*</span></label>
+                                <select class="form-select" id="payment_method" name="payment_method" required>
+                                    <option value="">-- اختر طريقة الدفع --</option>
+                                    <option value="cash">نقداً</option>
+                                    <option value="card">بطاقة ائتمان</option>
+                                    <option value="bank_transfer">تحويل بنكي</option>
+                                </select>
+                                <div class="invalid-feedback">يرجى اختيار طريقة الدفع</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- قطع الغيار المباعة -->
+                    <div class="mb-4">
+                        <h6 class="mb-3">قطع الغيار المباعة</h6>
+                        <div id="parts-container">
+                            <div class="row mb-3 part-row">
+                                <div class="col-md-4">
+                                    <select class="form-select" name="parts[]" required>
+                                        <option value="">-- اختر قطعة الغيار --</option>
+                                        {% for part in parts %}
+                                        <option value="{{ part.id }}" data-price="{{ part.price }}" data-stock="{{ part.quantity }}">{{ part.name }} - {{ part.part_number }}</option>
+                                        {% endfor %}
+                                    </select>
+                                </div>
+                                <div class="col-md-2">
+                                    <input type="number" class="form-control quantity-input" name="quantities[]" min="1" placeholder="الكمية" required>
+                                </div>
+                                <div class="col-md-2">
+                                    <input type="number" class="form-control price-input" name="prices[]" step="0.01" placeholder="السعر"  required>
+                                </div>
+                                <div class="col-md-2">
+                                    <input type="number" class="form-control discount-input" name="discounts[]" step="0.01" value="0.01" min="0" placeholder="الخصم">
+                                </div>
+                                <div class="col-md-2">
+                                    <button type="button" class="btn btn-danger remove-part"><i class="fas fa-trash"></i></button>
+                                </div>
+                            </div>
+                        </div>
+                        <button type="button" class="btn btn-success" id="add-part">
+                            <i class="fas fa-plus me-1"></i>إضافة قطعة غيار
+                        </button>
+                    </div>
+
+                    <!-- الإجماليات -->
+                    <div class="row mb-4">
+                        <div class="col-md-6 offset-md-6">
+                            <div class="card">
+                                <div class="card-body">
+                                    <div class="mb-3">
+                                        <label class="form-label">المبلغ الإجمالي قبل الضريبة</label>
+                                        <div class="input-group">
+                                            <input type="text" class="form-control" id="subtotal_amount" name="subtotal_amount" readonly>
+                                            <span class="input-group-text">جنيه مصري</span>
+                                        </div>
+                                    </div>
+                                    <div class="mb-3">
+                                        <label class="form-label">ضريبة القيمة المضافة (14%)</label>
+                                        <div class="input-group">
+                                            <input type="text" class="form-control" id="tax_amount" name="tax_amount" readonly>
+                                            <span class="input-group-text">جنيه مصري</span>
+                                        </div>
+                                    </div>
+                                    <div class="mb-3">
+                                        <label class="form-label">المبلغ الإجمالي شامل الضريبة</label>
+                                        <div class="input-group">
+                                            <input type="text" class="form-control" id="total_amount" name="total_amount" readonly>
+                                            <span class="input-group-text">جنيه مصري</span>
+                                        </div>
+                                    </div>
+                                    <div class="mb-3">
+                                        <label for="discount" class="form-label">خصم إضافي</label>
+                                        <div class="input-group">
+                                            <input type="number" class="form-control" id="discount" name="discount" step="0.01" value="0" min="0">
+                                            <span class="input-group-text">جنيه مصري</span>
+                                        </div>
+                                    </div>
+                                    <div class="mb-3">
+                                        <label class="form-label">المبلغ النهائي بعد الخصم</label>
+                                        <div class="input-group">
+                                            <input type="text" class="form-control" id="final_amount" name="final_amount" readonly>
+                                            <span class="input-group-text">جنيه مصري</span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- ملاحظات -->
+                    <div class="mb-4">
+                        <label for="notes" class="form-label">ملاحظات</label>
+                        <textarea class="form-control" id="notes" name="notes" rows="3"></textarea>
+                    </div>
+
+                    <!-- أزرار التحكم -->
+                    <div class="text-end">
+                        <button type="button" class="btn btn-secondary" onclick="history.back()">إلغاء</button>
+                        <button type="button" class="btn btn-info me-2" onclick="printInvoice()"><i class="fas fa-print me-1"></i>طباعة الفاتورة</button>
+                        <button type="submit" class="btn btn-primary">حفظ</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- سكريبت التحقق من صحة النموذج وحساب الإجماليات -->
+<script>
+(function () {
+    'use strict'
+
+    // التحقق من صحة النموذج
+    var forms = document.querySelectorAll('.needs-validation')
+    Array.prototype.slice.call(forms).forEach(function (form) {
+        form.addEventListener('submit', function (event) {
+            if (!form.checkValidity()) {
+                event.preventDefault()
+                event.stopPropagation()
+            }
+            form.classList.add('was-validated')
+        }, false)
+    })
+
+    // إضافة صف جديد لقطعة غيار
+    document.getElementById('add-part').addEventListener('click', function() {
+        var container = document.getElementById('parts-container')
+        var row = container.querySelector('.part-row').cloneNode(true)
+        row.querySelectorAll('input').forEach(input => input.value = '')
+        row.querySelector('select').selectedIndex = 0
+        container.appendChild(row)
+        updateRemoveButtons()
+        attachEventListeners(row)
+    })
+
+    // حذف صف قطعة غيار
+    function updateRemoveButtons() {
+        var removeButtons = document.querySelectorAll('.remove-part')
+        removeButtons.forEach(button => {
+            button.addEventListener('click', function() {
+                if (document.querySelectorAll('.part-row').length > 1) {
+                    this.closest('.part-row').remove()
+                    calculateTotals()
+                }
+            })
+        })
+    }
+
+    // إضافة مستمعي الأحداث للحقول
+    function attachEventListeners(row) {
+        var select = row.querySelector('select');
+        var quantityInput = row.querySelector('.quantity-input');
+        var priceInput = row.querySelector('.price-input');
+        var discountInput = row.querySelector('.discount-input');
+
+        select.addEventListener('change', function() {
+            var option = this.options[this.selectedIndex];
+            if (option.value) {
+                priceInput.value = option.dataset.price;
+                quantityInput.max = option.dataset.stock;
+                quantityInput.value = 1;
+                calculateTotals();
+            } else {
+                priceInput.value = '';
+                quantityInput.value = '';
+                quantityInput.max = '';
+            }
+        });
+
+        quantityInput.addEventListener('change', function() {
+            if (this.value && select.value) {
+                calculateTotals();
+            }
+        });
+
+        discountInput.addEventListener('change', function() {
+            calculateTotals();
+        });
+    }
+
+    // حساب الإجماليات
+    function calculateTotals() {
+        var subtotal = 0
+        document.querySelectorAll('.part-row').forEach(row => {
+            var quantity = parseFloat(row.querySelector('.quantity-input').value) || 0
+            var price = parseFloat(row.querySelector('.price-input').value) || 0
+            var discount = parseFloat(row.querySelector('.discount-input').value) || 0
+            subtotal += (quantity * price) - discount
+        })
+
+        // حساب الضريبة (14%)
+        var taxRate = 0.14
+        var taxAmount = subtotal * taxRate
+        var totalWithTax = subtotal + taxAmount
+
+        // حساب الخصم الإضافي
+        var additionalDiscount = parseFloat(document.getElementById('discount').value) || 0
+        var finalAmount = totalWithTax - additionalDiscount
+
+        // تحديث القيم في النموذج
+        document.getElementById('subtotal_amount').value = subtotal.toFixed(2)
+        document.getElementById('tax_amount').value = taxAmount.toFixed(2)
+        document.getElementById('total_amount').value = totalWithTax.toFixed(2)
+        document.getElementById('final_amount').value = finalAmount.toFixed(2)
+    }
+
+    // تهيئة مستمعي الأحداث للصف الأول
+    updateRemoveButtons()
+    document.querySelectorAll('.part-row').forEach(row => attachEventListeners(row))
+    document.getElementById('discount').addEventListener('input', calculateTotals)
+
+    // إنشاء رقم الفاتورة تلقائياً
+    function generateInvoiceNumber() {
+        const date = new Date();
+        const year = date.getFullYear();
+        const month = String(date.getMonth() + 1).padStart(2, '0');
+        const day = String(date.getDate()).padStart(2, '0');
+        const random = Math.floor(Math.random() * 10000).toString().padStart(4, '0');
+        return `INV-${year}${month}${day}-${random}`;
+    }
+
+    // تعيين رقم الفاتورة وتاريخ اليوم كقيم افتراضية
+    document.getElementById('invoice_number').value = generateInvoiceNumber();
+    document.getElementById('sale_date').valueAsDate = new Date();
+
+    // دالة طباعة الفاتورة
+    function printInvoice() {
+        var printWindow = window.open('', '_blank')
+        var content = `
+            <html dir="rtl">
+            <head>
+                <title>فاتورة بيع</title>
+                <style>
+                    body { font-family: Arial, sans-serif; padding: 20px; }
+                    .invoice-header { text-align: center; margin-bottom: 30px; }
+                    .invoice-details { margin-bottom: 20px; }
+                    table { width: 100%; border-collapse: collapse; margin-bottom: 20px; }
+                    th, td { border: 1px solid #ddd; padding: 8px; text-align: right; }
+                    .totals { text-align: left; margin-top: 20px; }
+                </style>
+            </head>
+            <body>
+                <div class="invoice-header">
+                    <h2>{{ store_settings.store_name }}</h2>
+                    <p>سجل تجاري: {{ store_settings.commercial_register }}</p>
+                    <p>بطاقة ضريبية: {{ store_settings.tax_number }}</p>
+                    {% if store_settings.address %}<p>{{ store_settings.address }}</p>{% endif %}
+                    {% if store_settings.phone %}<p>هاتف: {{ store_settings.phone }}</p>{% endif %}
+                    <h3>فاتورة بيع</h3>
+                    <p>رقم الفاتورة: {{ invoice_number }}</p>
+                </div>
+                <div class="invoice-details">
+                    <p>اسم العميل: ${document.getElementById('customer_name').value}</p>
+                    <p>تاريخ البيع: ${document.getElementById('sale_date').value}</p>
+                </div>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>قطعة الغيار</th>
+                            <th>الكمية</th>
+                            <th>السعر</th>
+                            <th>الخصم</th>
+                            <th>الإجمالي</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        ${Array.from(document.querySelectorAll('.part-row')).map(row => {
+                            const part = row.querySelector('select option:checked').text
+                            const quantity = row.querySelector('.quantity-input').value
+                            const price = row.querySelector('.price-input').value
+                            const discount = row.querySelector('.discount-input').value
+                            const total = (quantity * price) - discount
+                            return `
+                                <tr>
+                                    <td>${part}</td>
+                                    <td>${quantity}</td>
+                                    <td>${price}</td>
+                                    <td>${discount}</td>
+                                    <td>${total.toFixed(2)}</td>
+                                </tr>
+                            `
+                        }).join('')}
+                    </tbody>
+                </table>
+                <div class="totals">
+                    <p>المبلغ الإجمالي قبل الضريبة: ${document.getElementById('subtotal_amount').value} جنيه مصري</p>
+                    <p>ضريبة القيمة المضافة: ${document.getElementById('tax_amount').value} جنيه مصري</p>
+                    <p>المبلغ الإجمالي شامل الضريبة: ${document.getElementById('total_amount').value} جنيه مصري</p>
+                    <p>الخصم: ${document.getElementById('discount').value} جنيه مصري</p>
+                    <p>المبلغ النهائي: ${document.getElementById('final_amount').value} جنيه مصري</p>
+                </div>
+            </body>
+            </html>
+        `
+        printWindow.document.write(content)
+        printWindow.document.close()
+        printWindow.focus()
+        setTimeout(() => printWindow.print(), 250)
+    }
+})()
+</script>
+{% endblock %}

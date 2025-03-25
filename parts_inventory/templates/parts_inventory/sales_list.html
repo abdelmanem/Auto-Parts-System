@@ -1,0 +1,137 @@
+{% extends 'base.html' %}
+
+{% block title %}قائمة المبيعات - نظام إدارة قطع غيار السيارات{% endblock %}
+
+{% block content %}
+<div class="row mb-4">
+    <div class="col-12">
+        <div class="card shadow">
+            <div class="card-header bg-primary text-white">
+                <h5 class="mb-0"><i class="fas fa-shopping-cart me-2"></i>قائمة المبيعات</h5>
+            </div>
+            <div class="card-body">
+                <!-- نموذج البحث والفلترة -->
+                <form method="get" class="search-form mb-4">
+                    <div class="row g-3">
+                        <div class="col-md-3">
+                            <div class="input-group">
+                                <input type="text" name="q" class="form-control" placeholder="رقم الفاتورة أو اسم العميل..." value="{{ query }}">
+                                <button type="submit" class="btn btn-primary">
+                                    <i class="fas fa-search"></i>
+                                </button>
+                            </div>
+                        </div>
+                        <div class="col-md-2">
+                            <select name="status" class="form-select">
+                                <option value="">-- جميع الحالات --</option>
+                                <option value="pending" {% if selected_status == 'pending' %}selected{% endif %}>قيد الانتظار</option>
+                                <option value="completed" {% if selected_status == 'completed' %}selected{% endif %}>مكتمل</option>
+                                <option value="cancelled" {% if selected_status == 'cancelled' %}selected{% endif %}>ملغي</option>
+                            </select>
+                        </div>
+                        <div class="col-md-3">
+                            <input type="date" name="date_from" class="form-control" placeholder="من تاريخ" value="{{ date_from }}">
+                        </div>
+                        <div class="col-md-3">
+                            <input type="date" name="date_to" class="form-control" placeholder="إلى تاريخ" value="{{ date_to }}">
+                        </div>
+                        <div class="col-md-1">
+                            <button type="reset" class="btn btn-outline-secondary w-100">
+                                <i class="fas fa-redo"></i>
+                            </button>
+                        </div>
+                    </div>
+                </form>
+                
+                <!-- جدول المبيعات -->
+                {% if page_obj %}
+                <div class="table-responsive">
+                    <table class="table table-hover">
+                        <thead>
+                            <tr>
+                                <th>رقم الفاتورة</th>
+                                <th>العميل</th>
+                                <th>تاريخ البيع</th>
+                                <th>المبلغ الإجمالي</th>
+                                <th>الخصم</th>
+                                <th>المبلغ النهائي</th>
+                                <th>الحالة</th>
+                                <th>الإجراءات</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for sale in page_obj %}
+                            <tr>
+                                <td>
+                                    <a href="{% url 'parts_inventory:sale_detail' sale.id %}">
+                                        {{ sale.invoice_number }}
+                                    </a>
+                                </td>
+                                <td>{{ sale.customer_name }}</td>
+                                <td>{{ sale.sale_date|date:"Y-m-d" }}</td>
+                                <td>{{ sale.total_amount }} جنيه مصري</td>
+                                <td>{{ sale.discount }} جنيه مصري</td>
+                                <td>{{ sale.final_amount }} جنيه مصري</td>
+                                <td>
+                                    {% if sale.status == 'completed' %}
+                                    <span class="badge bg-success">{{ sale.get_status_display }}</span>
+                                    {% elif sale.status == 'pending' %}
+                                    <span class="badge bg-warning">{{ sale.get_status_display }}</span>
+                                    {% else %}
+                                    <span class="badge bg-danger">{{ sale.get_status_display }}</span>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    <a href="{% url 'parts_inventory:sale_detail' sale.id %}" class="btn btn-sm btn-info" title="عرض التفاصيل">
+                                        <i class="fas fa-eye"></i>
+                                    </a>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                
+                <!-- ترقيم الصفحات -->
+                {% if page_obj.has_other_pages %}
+                <nav aria-label="Page navigation" class="mt-4">
+                    <ul class="pagination justify-content-center">
+                        {% if page_obj.has_previous %}
+                        <li class="page-item">
+                            <a class="page-link" href="?page=1{% if query %}&q={{ query }}{% endif %}{% if selected_status %}&status={{ selected_status }}{% endif %}{% if date_from %}&date_from={{ date_from }}{% endif %}{% if date_to %}&date_to={{ date_to }}{% endif %}{% if sort_by %}&sort={{ sort_by }}{% endif %}" aria-label="First">
+                                <span aria-hidden="true">&laquo;&laquo;</span>
+                            </a>
+                        </li>
+                        <li class="page-item">
+                            <a class="page-link" href="?page={{ page_obj.previous_page_number }}{% if query %}&q={{ query }}{% endif %}{% if selected_status %}&status={{ selected_status }}{% endif %}{% if date_from %}&date_from={{ date_from }}{% endif %}{% if date_to %}&date_to={{ date_to }}{% endif %}{% if sort_by %}&sort={{ sort_by }}{% endif %}" aria-label="Previous">
+                                <span aria-hidden="true">&laquo;</span>
+                            </a>
+                        </li>
+                        {% endif %}
+                        
+                        {% for num in page_obj.paginator.page_range %}
+                            {% if page_obj.number == num %}
+                            <li class="page-item active"><span class="page-link">{{ num }}</span></li>
+                            {% elif num > page_obj.number|add:'-3' and num < page_obj.number|add:'3' %}
+                            <li class="page-item">
+                                <a class="page-link" href="?page={{ num }}{% if query %}&q={{ query }}{% endif %}{% if selected_status %}&status={{ selected_status }}{% endif %}{% if date_from %}&date_from={{ date_from }}{% endif %}{% if date_to %}&date_to={{ date_to }}{% endif %}{% if sort_by %}&sort={{ sort_by }}{% endif %}">{{ num }}</a>
+                            </li>
+                            {% endif %}
+                        {% endfor %}
+                        
+                        {% if page_obj.has_next %}
+                        <li class="page-item">
+                            <a class="page-link" href="?page={{ page_obj.next_page_number }}{% if query %}&q={{ query }}{% endif %}{% if selected_status %}&status={{ selected_status }}{% endif %}{% if date_from %}&date_from={{ date_from }}{% endif %}{% if date_to %}&date_to={{ date_to }}{% endif %}{% if sort_by %}&sort={{ sort_by }}{% endif %}" aria-label="Next">
+                                <span aria-hidden="true">&raquo;</span>
+                            </a>
+                        </li>
+                        {% endif %}
+                        {% endif %}
+                    </ul>
+                </nav>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

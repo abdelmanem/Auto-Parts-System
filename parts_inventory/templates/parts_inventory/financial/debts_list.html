@@ -1,0 +1,203 @@
+{% extends 'base.html' %}
+
+{% block title %}الديون والمديونيات - نظام إدارة قطع غيار السيارات{% endblock %}
+
+{% block content %}
+<div class="row mb-4">
+    <div class="col-12">
+        <div class="card shadow">
+            <div class="card-header bg-primary text-white">
+                <h5 class="mb-0"><i class="fas fa-hand-holding-usd me-2"></i>الديون والمديونيات</h5>
+            </div>
+            <div class="card-body">
+                <!-- نموذج البحث والفلترة -->
+                <form method="get" class="search-form mb-4">
+                    <div class="row g-3">
+                        <div class="col-md-3">
+                            <div class="input-group">
+                                <input type="text" name="q" class="form-control" placeholder="ابحث عن دين..." value="{{ query }}">
+                                <button type="submit" class="btn btn-primary">
+                                    <i class="fas fa-search"></i>
+                                </button>
+                            </div>
+                        </div>
+                        <div class="col-md-2">
+                            <select name="debt_type" class="form-select">
+                                <option value="">-- جميع الأنواع --</option>
+                                <option value="receivable" {% if debt_type == 'receivable' %}selected{% endif %}>مستحق لنا</option>
+                                <option value="payable" {% if debt_type == 'payable' %}selected{% endif %}>مستحق علينا</option>
+                            </select>
+                        </div>
+                        <div class="col-md-2">
+                            <select name="is_paid" class="form-select">
+                                <option value="">-- حالة السداد --</option>
+                                <option value="false" {% if is_paid == 'false' %}selected{% endif %}>غير مسدد</option>
+                                <option value="true" {% if is_paid == 'true' %}selected{% endif %}>مسدد</option>
+                            </select>
+                        </div>
+                        <div class="col-md-2">
+                            <select name="due_date_filter" class="form-select">
+                                <option value="">-- تاريخ الاستحقاق --</option>
+                                <option value="overdue" {% if due_date_filter == 'overdue' %}selected{% endif %}>متأخر</option>
+                                <option value="upcoming" {% if due_date_filter == 'upcoming' %}selected{% endif %}>قريب (30 يوم)</option>
+                            </select>
+                        </div>
+                        <div class="col-md-3">
+                            <button type="button" class="btn btn-success w-100" data-bs-toggle="modal" data-bs-target="#addDebtModal">
+                                <i class="fas fa-plus me-1"></i> إضافة دين
+                            </button>
+                        </div>
+                    </div>
+                </form>
+                
+                <!-- جدول الديون -->
+                {% if page_obj %}
+                <div class="table-responsive">
+                    <table class="table table-striped table-hover">
+                        <thead>
+                            <tr>
+                                <th>النوع</th>
+                                <th>الجهة</th>
+                                <th>المبلغ الأصلي</th>
+                                <th>المبلغ المتبقي</th>
+                                <th>تاريخ الاستحقاق</th>
+                                <th>الحالة</th>
+                                <th>المرجع</th>
+                                <th>الإجراءات</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for debt in page_obj %}
+                            <tr>
+                                <td>
+                                    <span class="badge {% if debt.debt_type == 'receivable' %}bg-success{% else %}bg-danger{% endif %}">
+                                        {{ debt.get_debt_type_display }}
+                                    </span>
+                                </td>
+                                <td>
+                                    {% if debt.debt_type == 'receivable' %}
+                                        {{ debt.customer_name|default:"--" }}
+                                    {% else %}
+                                        {{ debt.supplier.name|default:"--" }}
+                                    {% endif %}
+                                </td>
+                                <td>{{ debt.original_amount }}</td>
+                                <td>{{ debt.remaining_amount }}</td>
+                                <td>{{ debt.due_date|date:"Y-m-d" }}</td>
+                                <td>
+                                    {% if debt.is_paid %}
+                                        <span class="badge bg-success">مسدد</span>
+                                    {% else %}
+                                        <span class="badge bg-warning">غير مسدد</span>
+                                    {% endif %}
+                                </td>
+                                <td>{{ debt.reference_number|default:"--" }}</td>
+                                <td>
+                                    <div class="btn-group">
+                                        <button class="btn btn-sm btn-primary" data-bs-toggle="modal" data-bs-target="#editDebtModal{{ debt.id }}">
+                                            <i class="fas fa-edit"></i>
+                                        </button>
+                                        <button class="btn btn-sm btn-danger" data-bs-toggle="modal" data-bs-target="#deleteDebtModal{{ debt.id }}">
+                                            <i class="fas fa-trash"></i>
+                                        </button>
+                                    </div>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- نموذج إضافة دين جديد -->
+<div class="modal fade" id="addDebtModal" tabindex="-1" aria-labelledby="addDebtModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <form method="post" action="{% url 'parts_inventory:financial:add_debt' %}">
+                {% csrf_token %}
+                <div class="modal-header">
+                    <h5 class="modal-title" id="addDebtModalLabel">إضافة دين جديد</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label for="debt_type" class="form-label">نوع الدين</label>
+                        <select name="debt_type" id="debt_type" class="form-select" required>
+                            <option value="receivable">مستحق لنا</option>
+                            <option value="payable">مستحق علينا</option>
+                        </select>
+                    </div>
+                    <div class="mb-3" id="customer_name_field">
+                        <label for="customer_name" class="form-label">اسم العميل</label>
+                        <input type="text" name="customer_name" id="customer_name" class="form-control">
+                    </div>
+                    <div class="mb-3" id="supplier_field" style="display: none;">
+                        <label for="supplier" class="form-label">المورد</label>
+                        <select name="supplier" id="supplier" class="form-select">
+                            {% for supplier in suppliers %}
+                            <option value="{{ supplier.id }}">{{ supplier.name }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label for="original_amount" class="form-label">المبلغ الأصلي</label>
+                        <input type="number" name="original_amount" id="original_amount" class="form-control" required step="0.01">
+                    </div>
+                    <div class="mb-3">
+                        <label for="remaining_amount" class="form-label">المبلغ المتبقي</label>
+                        <input type="number" name="remaining_amount" id="remaining_amount" class="form-control" required step="0.01">
+                    </div>
+                    <div class="mb-3">
+                        <label for="due_date" class="form-label">تاريخ الاستحقاق</label>
+                        <input type="date" name="due_date" id="due_date" class="form-control" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="reference_number" class="form-label">رقم المرجع</label>
+                        <input type="text" name="reference_number" id="reference_number" class="form-control">
+                    </div>
+                    <div class="mb-3">
+                        <div class="form-check">
+                            <input type="checkbox" name="is_paid" id="is_paid" class="form-check-input">
+                            <label for="is_paid" class="form-check-label">تم السداد</label>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">إلغاء</button>
+                    <button type="submit" class="btn btn-primary">حفظ</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const debtTypeSelect = document.getElementById('debt_type');
+    const customerNameField = document.getElementById('customer_name_field');
+    const supplierField = document.getElementById('supplier_field');
+    const originalAmountInput = document.getElementById('original_amount');
+    const remainingAmountInput = document.getElementById('remaining_amount');
+
+    // تحديث حقول النموذج بناءً على نوع الدين
+    debtTypeSelect.addEventListener('change', function() {
+        if (this.value === 'receivable') {
+            customerNameField.style.display = 'block';
+            supplierField.style.display = 'none';
+        } else {
+            customerNameField.style.display = 'none';
+            supplierField.style.display = 'block';
+        }
+    });
+
+    // نسخ المبلغ الأصلي إلى المبلغ المتبقي عند الإدخال
+    originalAmountInput.addEventListener('input', function() {
+        remainingAmountInput.value = this.value;
+    });
+});
+</script>
+{% endblock %}

@@ -1,0 +1,156 @@
+/* نمط عام للتطبيق */
+body {
+    font-family: 'Tajawal', sans-serif;
+    background-color: #f8f9fa;
+}
+
+/* تعديلات للواجهة العربية */
+.navbar-brand {
+    font-weight: bold;
+    font-size: 1.5rem;
+}
+
+/* تنسيق البطاقات */
+.card {
+    border-radius: 10px;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    margin-bottom: 20px;
+    transition: transform 0.3s;
+}
+
+.card:hover {
+    transform: translateY(-5px);
+}
+
+/* ألوان خلفية البطاقات الداكنة */
+.bg-primary-dark {
+    background-color: #0d47a1;
+}
+
+.bg-success-dark {
+    background-color: #1b5e20;
+}
+
+.bg-warning-dark {
+    background-color: #e65100;
+}
+
+.bg-info-dark {
+    background-color: #006064;
+}
+
+.bg-danger-dark {
+    background-color: #b71c1c;
+}
+
+/* تنسيق الجداول */
+.table th {
+    font-weight: bold;
+    background-color: #f2f2f2;
+}
+
+.table-hover tbody tr:hover {
+    background-color: rgba(0, 123, 255, 0.1);
+}
+
+/* تنسيق الأزرار */
+.btn {
+    border-radius: 5px;
+    font-weight: 500;
+}
+
+/* تنسيق نموذج البحث */
+.search-form {
+    background-color: #fff;
+    padding: 15px;
+    border-radius: 10px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    margin-bottom: 20px;
+}
+
+/* تنسيق الشريط الجانبي */
+.sidebar {
+    background-color: #343a40;
+    color: #fff;
+    min-height: calc(100vh - 56px);
+    padding-top: 20px;
+}
+
+.sidebar .nav-link {
+    color: rgba(255, 255, 255, 0.8);
+    padding: 10px 20px;
+    margin-bottom: 5px;
+    border-radius: 5px;
+}
+
+.sidebar .nav-link:hover {
+    background-color: rgba(255, 255, 255, 0.1);
+    color: #fff;
+}
+
+.sidebar .nav-link.active {
+    background-color: #007bff;
+    color: #fff;
+}
+
+/* تنسيق صفحة تفاصيل المنتج */
+.product-image {
+    max-width: 100%;
+    height: auto;
+    border-radius: 10px;
+}
+
+/* تنسيق الإشعارات */
+.badge {
+    font-weight: 500;
+    padding: 5px 10px;
+    border-radius: 20px;
+}
+
+/* تنسيق الصفحات */
+.pagination .page-link {
+    color: #007bff;
+    border-radius: 5px;
+    margin: 0 2px;
+}
+
+.pagination .page-item.active .page-link {
+    background-color: #007bff;
+    border-color: #007bff;
+}
+
+/* تنسيق الفوتر */
+footer {
+    margin-top: 50px;
+}
+
+/* تنسيق للشاشات الصغيرة */
+@media (max-width: 768px) {
+    .card-stats {
+        margin-bottom: 15px;
+    }
+    
+    .table-responsive {
+        font-size: 0.9rem;
+    }
+}
+
+/* تنسيق للطباعة */
+@media print {
+    .no-print {
+        display: none;
+    }
+    
+    .print-only {
+        display: block;
+    }
+    
+    body {
+        font-size: 12pt;
+    }
+    
+    .container {
+        width: 100%;
+        max-width: 100%;
+    }
+}

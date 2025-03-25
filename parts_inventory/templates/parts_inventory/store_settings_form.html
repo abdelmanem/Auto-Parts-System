@@ -1,0 +1,99 @@
+{% extends 'base.html' %}
+
+{% block title %}إعدادات المحل - نظام إدارة قطع غيار السيارات{% endblock %}
+
+{% block content %}
+<div class="row mb-4">
+    <div class="col-12">
+        <div class="card shadow">
+            <div class="card-header bg-primary text-white">
+                <h5 class="mb-0"><i class="fas fa-store me-2"></i>إعدادات المحل</h5>
+            </div>
+            <div class="card-body">
+                <form method="post" class="needs-validation" novalidate enctype="multipart/form-data">
+                    {% csrf_token %}
+                    
+                    <!-- معلومات المحل الأساسية -->
+                    <div class="row mb-4">
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="store_name" class="form-label">اسم المحل <span class="text-danger">*</span></label>
+                                <input type="text" class="form-control" id="store_name" name="store_name" value="{{ store_settings.store_name }}" required>
+                                <div class="invalid-feedback">يرجى إدخال اسم المحل</div>
+                            </div>
+                            <div class="mb-3">
+                                <label for="commercial_register" class="form-label">السجل التجاري <span class="text-danger">*</span></label>
+                                <input type="text" class="form-control" id="commercial_register" name="commercial_register" value="{{ store_settings.commercial_register }}" required>
+                                <div class="invalid-feedback">يرجى إدخال رقم السجل التجاري</div>
+                            </div>
+                            <div class="mb-3">
+                                <label for="tax_number" class="form-label">البطاقة الضريبية <span class="text-danger">*</span></label>
+                                <input type="text" class="form-control" id="tax_number" name="tax_number" value="{{ store_settings.tax_number }}" required>
+                                <div class="invalid-feedback">يرجى إدخال رقم البطاقة الضريبية</div>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="phone" class="form-label">رقم الهاتف</label>
+                                <input type="tel" class="form-control" id="phone" name="phone" value="{{ store_settings.phone }}">
+                            </div>
+                            <div class="mb-3">
+                                <label for="email" class="form-label">البريد الإلكتروني</label>
+                                <input type="email" class="form-control" id="email" name="email" value="{{ store_settings.email }}">
+                                <div class="invalid-feedback">يرجى إدخال بريد إلكتروني صحيح</div>
+                            </div>
+                            <div class="mb-3">
+                                <label for="address" class="form-label">العنوان</label>
+                                <textarea class="form-control" id="address" name="address" rows="3">{{ store_settings.address }}</textarea>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- شعار المحل -->
+                    <div class="row mb-4">
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="logo" class="form-label">شعار المحل</label>
+                                <input type="file" class="form-control" id="logo" name="logo" accept="image/*">
+                                <div class="form-text">يمكنك رفع صورة بصيغة JPG، PNG، أو GIF</div>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            {% if store_settings.logo %}
+                            <div class="text-center">
+                                <img src="{{ store_settings.logo.url }}" alt="شعار المحل" class="img-fluid" style="max-height: 150px;">
+                            </div>
+                            {% endif %}
+                        </div>
+                    </div>
+
+                    <!-- أزرار التحكم -->
+                    <div class="text-end">
+                        <button type="button" class="btn btn-secondary" onclick="history.back()">إلغاء</button>
+                        <button type="submit" class="btn btn-primary">حفظ</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- سكريبت التحقق من صحة النموذج -->
+<script>
+(function () {
+    'use strict'
+
+    // التحقق من صحة النموذج
+    var forms = document.querySelectorAll('.needs-validation')
+    Array.prototype.slice.call(forms).forEach(function (form) {
+        form.addEventListener('submit', function (event) {
+            if (!form.checkValidity()) {
+                event.preventDefault()
+                event.stopPropagation()
+            }
+            form.classList.add('was-validated')
+        }, false)
+    })
+})()
+</script>
+{% endblock %}

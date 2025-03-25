@@ -1,0 +1,206 @@
+{% extends 'base.html' %}
+
+{% block title %}{{ supplier.name }} - تفاصيل المورد{% endblock %}
+
+{% block content %}
+<div class="row mb-4">
+    <div class="col-12">
+        <nav aria-label="breadcrumb">
+            <ol class="breadcrumb">
+                <li class="breadcrumb-item"><a href="{% url 'parts_inventory:index' %}">الرئيسية</a></li>
+                <li class="breadcrumb-item"><a href="{% url 'parts_inventory:suppliers_list' %}">الموردين</a></li>
+                <li class="breadcrumb-item active">{{ supplier.name }}</li>
+            </ol>
+        </nav>
+    </div>
+</div>
+
+<div class="row">
+    <!-- معلومات المورد -->
+    <div class="col-md-6">
+        <div class="card shadow mb-4">
+            <div class="card-header bg-info text-white">
+                <h5 class="mb-0"><i class="fas fa-truck me-2"></i>معلومات المورد</h5>
+            </div>
+            <div class="card-body">
+                <h4 class="mb-3">{{ supplier.name }}</h4>
+                
+                <div class="row mb-3">
+                    <div class="col-md-6">
+                        <h6>الشخص المسؤول:</h6>
+                        <p>{{ supplier.contact_person|default:"غير محدد" }}</p>
+                    </div>
+                    
+                    <div class="col-md-6">
+                        <h6>العنوان:</h6>
+                        <p>{{ supplier.address|default:"غير محدد" }}</p>
+                    </div>
+                </div>
+                
+                <div class="row mb-3">
+                    <div class="col-md-6">
+                        <h6>البريد الإلكتروني:</h6>
+                        <p>
+                            {% if supplier.email %}
+                            <a href="mailto:{{ supplier.email }}">{{ supplier.email }}</a>
+                            {% else %}
+                            غير محدد
+                            {% endif %}
+                        </p>
+                    </div>
+                    
+                    <div class="col-md-6">
+                        <h6>البلد:</h6>
+                        <p>{{ supplier.country|default:"غير محدد" }}</p>
+                    </div>
+                </div>
+                
+                <div class="row mb-3">
+                    <div class="col-md-6">
+                        <h6>رقم الهاتف:</h6>
+                        <p>
+                            {% if supplier.phone %}
+                            <a href="tel:{{ supplier.phone }}">{{ supplier.phone }}</a>
+                            {% else %}
+                            غير محدد
+                            {% endif %}
+                        </p>
+                    </div>
+                </div>
+                
+                <div class="mb-3">
+                    <h6>العنوان:</h6>
+                    <p>{{ supplier.address|default:"غير محدد"|linebreaks }}</p>
+                </div>
+                
+                <div class="mb-3">
+                    <h6>الموقع الإلكتروني:</h6>
+                    <p>
+                        {% if supplier.website %}
+                        <a href="{{ supplier.website }}" target="_blank">{{ supplier.website }}</a>
+                        {% else %}
+                        غير محدد
+                        {% endif %}
+                    </p>
+                </div>
+                
+                <div class="mb-3">
+                    <h6>ملاحظات:</h6>
+                    <p>{{ supplier.notes|default:"لا توجد ملاحظات"|linebreaks }}</p>
+                </div>
+                
+                <div class="row">
+                    <div class="col-md-6">
+                        <h6>تاريخ الإضافة:</h6>
+                        <p>{{ supplier.created_at|date:"Y-m-d" }}</p>
+                    </div>
+                    
+                    <div class="col-md-6">
+                        <h6>آخر تحديث:</h6>
+                        <p>{{ supplier.updated_at|date:"Y-m-d" }}</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- إحصائيات المورد -->
+    <div class="col-md-6">
+        <div class="card shadow mb-4">
+            <div class="card-header bg-primary text-white">
+                <h5 class="mb-0"><i class="fas fa-chart-line me-2"></i>إحصائيات المورد</h5>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-6 mb-4">
+                        <div class="card bg-success text-white">
+                            <div class="card-body text-center">
+                                <h6 class="card-title">إجمالي المشتريات</h6>
+                                <h3 class="display-6">{{ purchases.count }}</h3>
+                                <p class="mb-0">عملية شراء</p>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="col-md-6 mb-4">
+                        <div class="card bg-info text-white">
+                            <div class="card-body text-center">
+                                <h6 class="card-title">قيد الانتظار</h6>
+                                <h3 class="display-6">{{ pending_count }}</h3>
+                                <p class="mb-0">عملية شراء</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="row">
+                    <div class="col-md-6 mb-4">
+                        <div class="card bg-primary text-white">
+                            <div class="card-body text-center">
+                                <h6 class="card-title">تم الطلب</h6>
+                                <h3 class="display-6">{{ ordered_count }}</h3>
+                                <p class="mb-0">عملية شراء</p>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="col-md-6 mb-4">
+                        <div class="card bg-warning text-white">
+                            <div class="card-body text-center">
+                                <h6 class="card-title">تم الاستلام</h6>
+                                <h3 class="display-6">{{ received_count }}</h3>
+                                <p class="mb-0">عملية شراء</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- تاريخ المشتريات -->
+<div class="row">
+    <div class="col-12 mb-4">
+        <div class="card shadow">
+            <div class="card-header bg-success text-white">
+                <h5 class="mb-0"><i class="fas fa-shopping-basket me-2"></i>تاريخ المشتريات</h5>
+            </div>
+            <div class="card-body">
+                {% if purchases %}
+                <div class="table-responsive">
+                    <table class="table table-hover">
+                        <thead>
+                            <tr>
+                                <th>رقم الفاتورة</th>
+                                <th>تاريخ الشراء</th>
+                                <th>تاريخ التسليم المتوقع</th>
+                                <th>تاريخ التسليم الفعلي</th>
+                                <th>المبلغ الإجمالي</th>
+                                <th>الحالة</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for purchase in purchases %}
+                            <tr>
+                                <td>{{ purchase.invoice_number }}</td>
+                                <td>{{ purchase.purchase_date|date:"Y-m-d" }}</td>
+                                <td>{{ purchase.expected_delivery_date|date:"Y-m-d"|default:"غير محدد" }}</td>
+                                <td>{{ purchase.actual_delivery_date|date:"Y-m-d"|default:"لم يتم التسليم بعد" }}</td>
+                                <td>{{ purchase.total_amount }}</td>
+                                <td>{{ purchase.get_status_display }}</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                {% else %}
+                <div class="alert alert-info">
+                    <i class="fas fa-info-circle me-2"></i>لا توجد مشتريات لهذا المورد حتى الآن
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

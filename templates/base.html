@@ -1,0 +1,161 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}نظام إدارة قطع غيار السيارات{% endblock %}</title>
+    <!-- Bootstrap RTL CSS -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.rtl.min.css">
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Custom CSS -->
+    {% load static %}
+    <link rel="stylesheet" href="{% static 'css/style.css' %}">
+    {% block extra_css %}{% endblock %}
+</head>
+<body>
+    <!-- Navbar -->
+    <nav class="navbar navbar-expand-lg navbar-dark bg-primary">
+        <div class="container">
+            <a class="navbar-brand" href="{% url 'parts_inventory:index' %}">
+                <i class="fas fa-car-alt me-2"></i> إدارة    </a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav me-auto mb-2 mb-lg-0">
+                    <li class="nav-item">
+                        <a class="nav-link" href="{% url 'parts_inventory:index' %}">
+                            <i class="fas fa-home me-1"></i>الرئيسية
+                        </a>
+                    </li>
+                    <li class="nav-item dropdown">
+                        <a class="nav-link dropdown-toggle" href="#" id="inventoryDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                            <i class="fas fa-warehouse me-1"></i>المخزون
+                        </a>
+                        <ul class="dropdown-menu" aria-labelledby="inventoryDropdown">
+                            <li><h6 class="dropdown-header">قطع الغيار</h6></li>
+                            <li><a class="dropdown-item" href="{% url 'parts_inventory:parts_list' %}"><i class="fas fa-cogs me-1"></i>قائمة قطع الغيار</a></li>
+                            <li><a class="dropdown-item" href="{% url 'parts_inventory:part_form' %}"><i class="fas fa-plus me-1"></i>إضافة قطعة غيار</a></li>
+                            <li><hr class="dropdown-divider"></li>
+                            <li><h6 class="dropdown-header">الموردين</h6></li>
+                            <li><a class="dropdown-item" href="{% url 'parts_inventory:suppliers_list' %}"><i class="fas fa-truck me-1"></i>قائمة الموردين</a></li>
+                            <li><a class="dropdown-item" href="{% url 'parts_inventory:supplier_form' %}"><i class="fas fa-plus me-1"></i>إضافة مورد</a></li>
+                        </ul>
+                    </li>
+                    <li class="nav-item dropdown">
+                        <a class="nav-link dropdown-toggle" href="#" id="salesDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                            <i class="fas fa-shopping-cart me-1"></i>المبيعات
+                        </a>
+                        <ul class="dropdown-menu" aria-labelledby="salesDropdown">
+                            <li><a class="dropdown-item" href="{% url 'parts_inventory:sales_list' %}"><i class="fas fa-list me-1"></i>قائمة المبيعات</a></li>
+                            <li><a class="dropdown-item" href="{% url 'parts_inventory:sale_form' %}"><i class="fas fa-plus me-1"></i>إضافة عملية بيع</a></li>
+                        </ul>
+                    </li>
+                    <li class="nav-item dropdown">
+                        <a class="nav-link dropdown-toggle" href="#" id="purchasesDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                            <i class="fas fa-shopping-basket me-1"></i>المشتريات
+                        </a>
+                        <ul class="dropdown-menu" aria-labelledby="purchasesDropdown">
+                            <li><a class="dropdown-item" href="{% url 'parts_inventory:purchases_list' %}"><i class="fas fa-list me-1"></i>قائمة المشتريات</a></li>
+                            <li><a class="dropdown-item" href="{% url 'parts_inventory:purchase_form' %}"><i class="fas fa-plus me-1"></i>إضافة عملية شراء</a></li>
+                        </ul>
+                    </li>
+                    <li class="nav-item dropdown">
+                        <a class="nav-link dropdown-toggle" href="#" id="financialDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                            <i class="fas fa-money-bill-wave me-1"></i>النظام المالي
+                        </a>
+                        <ul class="dropdown-menu" aria-labelledby="financialDropdown">
+                            <li><a class="dropdown-item" href="{% url 'parts_inventory:financial:dashboard' %}">لوحة التحكم المالية</a></li>
+                            <li><a class="dropdown-item" href="{% url 'parts_inventory:financial:accounts_list' %}">الحسابات المالية</a></li>
+                            <li><a class="dropdown-item" href="{% url 'parts_inventory:financial:transactions_list' %}">المعاملات المالية</a></li>
+                            <li><a class="dropdown-item" href="{% url 'parts_inventory:financial:debts_list' %}">الديون والمديونيات</a></li>
+                            <li><a class="dropdown-item" href="{% url 'parts_inventory:financial:profit_loss_report' %}">تقرير الربح والخسارة</a></li>
+                            <li><hr class="dropdown-divider"></li>
+                            <li><a class="dropdown-item" href="{% url 'parts_inventory:financial:tax_dashboard' %}"><i class="fas fa-file-invoice-dollar me-1"></i>نظام الضرائب</a></li>
+                            <li><a class="dropdown-item" href="{% url 'parts_inventory:financial:tax_rates_list' %}">معدلات الضرائب</a></li>
+                            <li><a class="dropdown-item" href="{% url 'parts_inventory:financial:sales_taxes_list' %}">ضرائب المبيعات</a></li>
+                            <li><a class="dropdown-item" href="{% url 'parts_inventory:financial:purchase_taxes_list' %}">ضرائب المشتريات</a></li>
+                            <li><a class="dropdown-item" href="{% url 'parts_inventory:financial:tax_reports_list' %}">التقارير الضريبية</a></li>
+                        </ul>
+                    </li>
+                    <li class="nav-item dropdown">
+                        <a class="nav-link dropdown-toggle" href="#" id="settingsDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                            <i class="fas fa-cog me-1"></i>الإعدادات
+                        </a>
+                        <ul class="dropdown-menu" aria-labelledby="settingsDropdown">
+                            <li><a class="dropdown-item" href="{% url 'parts_inventory:shop_settings' %}"><i class="fas fa-store me-1"></i>إعدادات المحل</a></li>
+                            <li><a class="dropdown-item" href="{% url 'parts_inventory:manufacturers_list' %}"><i class="fas fa-industry me-1"></i>الشركات المصنعة</a></li>
+                            <li><a class="dropdown-item" href="{% url 'parts_inventory:categories_list' %}"><i class="fas fa-tags me-1"></i>الفئات</a></li>
+                            <li><hr class="dropdown-divider"></li>
+                            <li><a class="dropdown-item" href="{% url 'parts_inventory:system_settings' %}"><i class="fas fa-sliders-h me-1"></i>إعدادات النظام</a></li>
+                        </ul>
+                    </li>
+                </ul>
+                <div class="d-flex">
+                    {% if user.is_authenticated %}
+                    <div class="dropdown">
+                        <button class="btn btn-outline-light dropdown-toggle" type="button" id="userDropdown" data-bs-toggle="dropdown" aria-expanded="false">
+                            <i class="fas fa-user me-1"></i>{{ user.username }}
+                        </button>
+                        <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="userDropdown">
+                            <li><a class="dropdown-item" href="{% url 'admin:index' %}">لوحة التحكم</a></li>
+                            <li><hr class="dropdown-divider"></li>
+                            <li><a class="dropdown-item" href="{% url 'logout' %}">تسجيل الخروج</a></li>
+                        </ul>
+                    </div>
+                    {% else %}
+                    <a href="{% url 'login' %}" class="btn btn-outline-light">
+                        <i class="fas fa-sign-in-alt me-1"></i>تسجيل الدخول
+                    </a>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Main Content -->
+    <div class="container mt-4 mb-5">
+        {% if messages %}
+            {% for message in messages %}
+                <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
+                    {{ message }}
+                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                </div>
+            {% endfor %}
+        {% endif %}
+
+        {% block content %}{% endblock %}
+    </div>
+
+    <!-- Footer -->
+    <footer class="bg-dark text-white py-4 mt-auto">
+        <div class="container">
+            <div class="row">
+                <div class="col-md-6">
+                    <h5>نظام إدارة قطع غيار السيارات</h5>
+                    <p>نظام متكامل لإدارة مخزون قطع غيار السيارات والمبيعات والمشتريات</p>
+                </div>
+                <div class="col-md-6 text-md-end">
+                    <h5>تواصل معنا</h5>
+                    <p>
+                        <i class="fas fa-envelope me-2"></i>info@autoparts.com<br>
+                        <i class="fas fa-phone me-2"></i>+020 1004405225 
+                    </p>
+                </div>
+            </div>
+            <hr>
+            <div class="text-center">
+                <p>&copy; {{ current_year }} نظام إدارة قطع غيار السيارات. جميع الحقوق محفوظة.</p>
+            </div>
+        </div>
+    </footer>
+
+    <!-- Bootstrap JS Bundle -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <!-- jQuery -->
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <!-- Custom JS -->
+    {% block extra_js %}{% endblock %}
+</body>
+</html>

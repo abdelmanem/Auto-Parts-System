@@ -1,0 +1,193 @@
+{% extends 'base.html' %}
+
+{% block title %}إضافة قطعة غيار جديدة - نظام إدارة قطع غيار السيارات
+{% endblock %}
+
+{% block extra_css %}
+<!-- Select2 CSS -->
+<link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
+<!-- Toastr CSS -->
+<link href="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/toastr.min.css" rel="stylesheet">
+<!-- Custom Select2 Bootstrap 5 Theme -->
+{% load static %}
+<link rel="stylesheet" href="{% static 'parts_inventory/css/select2-bootstrap5.css' %}">
+{% endblock %}
+
+{% block content %}
+<div class="row mb-4">
+    <div class="col-12">
+        <div class="card shadow">
+            <div class="card-header bg-primary text-white">
+                <h5 class="mb-0"><i class="fas fa-plus-circle me-2"></i>إضافة قطعة غيار جديدة</h5>
+            </div>
+            <div class="card-body">
+                <form method="post" enctype="multipart/form-data" class="needs-validation" novalidate>
+                    {% csrf_token %}
+                    {% if messages %}
+                    <div class="alert alert-danger">
+                        <ul class="mb-0">
+                            {% for message in messages %}
+                            <li>{{ message }}</li>
+                            {% endfor %}
+                        </ul>
+                    </div>
+                    {% endif %}
+                    
+                    <!-- معلومات أساسية -->
+                    <div class="row mb-4">
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="part_number" class="form-label">رقم القطعة <span class="text-danger">*</span></label>
+                                <input type="text" class="form-control" id="part_number" name="part_number" required>
+                                <div class="invalid-feedback">يرجى إدخال رقم القطعة</div>
+                            </div>
+                            <div class="mb-3">
+                                <label for="name" class="form-label">اسم القطعة <span class="text-danger">*</span></label>
+                                <input type="text" class="form-control" id="name" name="name" required>
+                                <div class="invalid-feedback">يرجى إدخال اسم القطعة</div>
+                            </div>
+                            <div class="mb-3">
+                                <label for="description" class="form-label">وصف القطعة</label>
+                                <textarea class="form-control" id="description" name="description" rows="3"></textarea>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="manufacturer" class="form-label">الشركة المصنعة <span class="text-danger">*</span></label>
+                                <div class="input-group">
+                                    <select class="form-select" id="manufacturer" name="manufacturer" required>
+                                        <option value="">-- اختر الشركة المصنعة --</option>
+                                        {% for manufacturer in manufacturers %}
+                                        <option value="{{ manufacturer.id }}">{{ manufacturer.name }}</option>
+                                        {% endfor %}
+                                    </select>
+                                    <button type="button" class="btn btn-outline-primary" data-bs-toggle="modal" data-bs-target="#addManufacturerModal">
+                                        <i class="fas fa-plus"></i>
+                                    </button>
+                                </div>
+                                <div class="invalid-feedback">يرجى اختيار الشركة المصنعة</div>
+                            </div>
+                            <div class="mb-3">
+                                <label for="category" class="form-label">الفئة <span class="text-danger">*</span></label>
+                                <div class="input-group">
+                                    <select class="form-select" id="category" name="category" required>
+                                        <option value="">-- اختر الفئة --</option>
+                                        {% for category in categories %}
+                                        <option value="{{ category.id }}">{{ category.name }}</option>
+                                        {% endfor %}
+                                    </select>
+                                    <button type="button" class="btn btn-outline-primary" data-bs-toggle="modal" data-bs-target="#addCategoryModal">
+                                        <i class="fas fa-plus"></i>
+                                    </button>
+                                </div>
+                                <div class="invalid-feedback">يرجى اختيار الفئة</div>
+                            </div>
+                            <div class="mb-3">
+                                <label for="car_models" class="form-label">موديلات السيارات المتوافقة</label>
+                                <select class="form-select" id="car_models" name="car_models" multiple>
+                                    {% for model in car_models %}
+                                    <option value="{{ model.id }}">{{ model.name }} - {{ model.year }}</option>
+                                    {% endfor %}
+                                </select>
+                                <div class="form-text">يمكنك اختيار أكثر من موديل</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- معلومات المخزون والأسعار -->
+                    <div class="row mb-4">
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="stock_quantity" class="form-label">الكمية المتوفرة <span class="text-danger">*</span></label>
+                                <input type="number" class="form-control" id="stock_quantity" name="stock_quantity" min="0" required>
+                                <div class="invalid-feedback">يرجى إدخال الكمية المتوفرة</div>
+                            </div>
+                            <div class="mb-3">
+                                <label for="min_stock_level" class="form-label">الحد الأدنى للمخزون <span class="text-danger">*</span></label>
+                                <input type="number" class="form-control" id="min_stock_level" name="min_stock_level" min="0" required>
+                                <div class="form-text">سيتم تنبيهك عندما تصل الكمية لهذا الحد</div>
+                            </div>
+                            <div class="mb-3">
+                                <label for="condition" class="form-label">الحالة <span class="text-danger">*</span></label>
+                                <select class="form-select" id="condition" name="condition" required>
+                                    <option value="">-- اختر الحالة --</option>
+                                    <option value="new">جديد</option>
+                                    <option value="used">مستعمل</option>
+                                    <option value="refurbished">مجدد</option>
+                                </select>
+                                <div class="invalid-feedback">يرجى اختيار حالة القطعة</div>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="price" class="form-label">سعر البيع <span class="text-danger">*</span></label>
+                                <div class="input-group">
+                                    <input type="number" class="form-control" id="price" name="price" step="0.01" required min="0">
+                                    <span class="input-group-text">جنيه مصري</span>
+                                </div>
+                                <div class="invalid-feedback">يرجى إدخال سعر البيع</div>
+                                <div class="form-text">أدخل سعر البيع للقطعة</div>
+                            </div>
+                            <div class="mb-3">
+                                <label for="purchase_price" class="form-label">سعر الشراء <span class="text-danger">*</span></label>
+                                <div class="input-group">
+                                    <input type="number" class="form-control" id="purchase_price" name="purchase_price" step="0.01" required min="0">
+                                    <span class="input-group-text">جنيه مصري</span>
+                                </div>
+                                <div class="invalid-feedback">يرجى إدخال سعر الشراء</div>
+                                <div class="form-text">أدخل سعر الشراء للقطعة</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- صور القطعة -->
+                    <div class="mb-4">
+                        <label for="images" class="form-label">صور القطعة</label>
+                        <input type="file" class="form-control" id="images" name="images" multiple accept="image/*">
+                        <div class="form-text">يمكنك اختيار عدة صور للقطعة</div>
+                    </div>
+
+                    <!-- أزرار التحكم -->
+                    <div class="text-end">
+                        <button type="button" class="btn btn-secondary" onclick="history.back()">إلغاء</button>
+                        <button type="submit" class="btn btn-primary">حفظ</button>
+                        {% if part %}
+                        <a href="{% url 'parts_inventory:part_edit' part.id %}" class="btn btn-warning"><i class="fas fa-edit me-1"></i>تعديل</a>
+                        {% endif %}
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- سكريبت التحقق من صحة النموذج -->
+<script>
+(function () {
+    'use strict'
+    var forms = document.querySelectorAll('.needs-validation')
+    Array.prototype.slice.call(forms).forEach(function (form) {
+        form.addEventListener('submit', function (event) {
+            if (!form.checkValidity()) {
+                event.preventDefault()
+                event.stopPropagation()
+            }
+            form.classList.add('was-validated')
+        }, false)
+    })
+})()
+</script>
+{% include 'parts_inventory/manufacturer_modal.html' %}
+{% include 'parts_inventory/category_modal.html' %}
+
+{% endblock %}
+
+{% block extra_js %}
+<!-- Select2 JS -->
+<script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/i18n/ar.js"></script>
+<!-- Toastr JS -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/toastr.min.js"></script>
+<!-- Custom JS -->
+<script src="{% static 'parts_inventory/js/part_form.js' %}"></script>
+{% endblock %}

@@ -1,0 +1,254 @@
+{% extends 'base.html' %}
+
+{% block title %}{{ part.name }} - تفاصيل قطعة الغيار{% endblock %}
+
+{% block content %}
+<div class="row mb-4">
+    <div class="col-12">
+        <nav aria-label="breadcrumb">
+            <ol class="breadcrumb">
+                <li class="breadcrumb-item"><a href="{% url 'parts_inventory:index' %}">الرئيسية</a></li>
+                <li class="breadcrumb-item"><a href="{% url 'parts_inventory:parts_list' %}">قطع الغيار</a></li>
+                <li class="breadcrumb-item active">{{ part.name }}</li>
+            </ol>
+        </nav>
+    </div>
+</div>
+
+<div class="row">
+    <!-- معلومات القطعة -->
+    <div class="col-md-8">
+        <div class="card shadow mb-4">
+            <div class="card-header bg-primary text-white">
+                <h5 class="mb-0"><i class="fas fa-cog me-2"></i>معلومات قطعة الغيار</h5>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-6">
+                        <h4 class="mb-3">{{ part.name }}</h4>
+                        <p class="text-muted">رقم القطعة: <strong>{{ part.part_number }}</strong></p>
+                        
+                        <div class="mb-3">
+                            <h6>الفئة:</h6>
+                            <p>{{ part.category.name }}</p>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <h6>الشركة المصنعة:</h6>
+                            <p>{{ part.manufacturer.name }}</p>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <h6>الحالة:</h6>
+                            <p>
+                                {% if part.condition == 'new' %}
+                                <span class="badge bg-primary">جديد</span>
+                                {% elif part.condition == 'used' %}
+                                <span class="badge bg-secondary">مستعمل</span>
+                                {% else %}
+                                <span class="badge bg-info">مجدد</span>
+                                {% endif %}
+                            </p>
+                        </div>
+                    </div>
+                    
+                    <div class="col-md-6">
+                        <div class="mb-3">
+                            <h6>السعر:</h6>
+                            <p class="text-primary fw-bold fs-4">{{ part.price }} جنيه مصري</p>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <h6>الكمية المتوفرة:</h6>
+                            <p>
+                                {% if part.is_low_stock %}
+                                <span class="badge bg-warning">{{ part.stock_quantity }} (منخفض)</span>
+                                {% else %}
+                                <span class="badge bg-success">{{ part.stock_quantity }}</span>
+                                {% endif %}
+                            </p>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <h6>الحد الأدنى للمخزون:</h6>
+                            <p>{{ part.min_stock_level }}</p>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <h6>موقع التخزين:</h6>
+                            <p>{{ part.location|default:"غير محدد" }}</p>
+                        </div>
+                    </div>
+                </div>
+                
+                <hr>
+                
+                <div class="row">
+                    <div class="col-12">
+                        <h6>الوصف:</h6>
+                        <p>{{ part.description|default:"لا يوجد وصف متاح"|linebreaks }}</p>
+                    </div>
+                </div>
+                
+                <div class="row">
+                    <div class="col-md-6">
+                        <h6>الأبعاد:</h6>
+                        <p>{{ part.dimensions|default:"غير محدد" }}</p>
+                    </div>
+                    
+                    <div class="col-md-6">
+                        <h6>الوزن:</h6>
+                        <p>{{ part.weight|default:"غير محدد" }} كجم</p>
+                    </div>
+                </div>
+                
+                <div class="row mt-3">
+                    <div class="col-12">
+                        <h6>السيارات المتوافقة:</h6>
+                        {% if part.compatible_cars.all %}
+                        <ul class="list-group">
+                            {% for car in part.compatible_cars.all %}
+                            <li class="list-group-item">{{ car.manufacturer.name }} {{ car.name }} ({{ car.year_from }}-{{ car.year_to|default:"حتى الآن" }})</li>
+                            {% endfor %}
+                        </ul>
+                        {% else %}
+                        <p class="text-muted">لا توجد سيارات متوافقة محددة</p>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- صورة القطعة والإحصائيات -->
+    <div class="col-md-4">
+        <div class="card shadow mb-4">
+            <div class="card-body text-center">
+                {% if part.image %}
+                <img src="{{ part.image.url }}" alt="{{ part.name }}" class="img-fluid product-image mb-3">
+                {% else %}
+                <div class="bg-light p-5 mb-3 rounded">
+                    <i class="fas fa-image fa-5x text-muted"></i>
+                    <p class="mt-3 text-muted">لا توجد صورة متاحة</p>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+        
+        <div class="card shadow mb-4">
+            <div class="card-header bg-info text-white">
+                <h5 class="mb-0"><i class="fas fa-chart-line me-2"></i>إحصائيات</h5>
+            </div>
+            <div class="card-body">
+                <ul class="list-group list-group-flush">
+                    <li class="list-group-item d-flex justify-content-between align-items-center">
+                        تاريخ الإضافة
+                        <span>{{ part.created_at|date:"Y-m-d" }}</span>
+                    </li>
+                    <li class="list-group-item d-flex justify-content-between align-items-center">
+                        آخر تحديث
+                        <span>{{ part.updated_at|date:"Y-m-d" }}</span>
+                    </li>
+                    <li class="list-group-item d-flex justify-content-between align-items-center">
+                        عدد عمليات البيع
+                        <span class="badge bg-primary rounded-pill">{{ sales_history.count }}</span>
+                    </li>
+                    <li class="list-group-item d-flex justify-content-between align-items-center">
+                        عدد عمليات الشراء
+                        <span class="badge bg-success rounded-pill">{{ purchase_history.count }}</span>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- تاريخ المبيعات والمشتريات -->
+<div class="row">
+    <!-- تاريخ المبيعات -->
+    <div class="col-md-6 mb-4">
+        <div class="card shadow">
+            <div class="card-header bg-primary text-white">
+                <h5 class="mb-0"><i class="fas fa-shopping-cart me-2"></i>تاريخ المبيعات</h5>
+            </div>
+            <div class="card-body">
+                {% if sales_history %}
+                <div class="table-responsive">
+                    <table class="table table-hover">
+                        <thead>
+                            <tr>
+                                <th>التاريخ</th>
+                                <th>رقم الفاتورة</th>
+                                <th>العميل</th>
+                                <th>الكمية</th>
+                                <th>السعر</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for item in sales_history %}
+                            <tr>
+                                <td>{{ item.sale.sale_date|date:"Y-m-d" }}</td>
+                                <td>
+                                    <a href="{% url 'parts_inventory:sale_detail' item.sale.id %}">
+                                        {{ item.sale.invoice_number }}
+                                    </a>
+                                </td>
+                                <td>{{ item.sale.customer_name }}</td>
+                                <td>{{ item.quantity }}</td>
+                                <td>{{ item.unit_price }} جنيه مصري</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                {% else %}
+                <p class="text-center">لا يوجد تاريخ مبيعات لهذه القطعة</p>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+    
+    <!-- تاريخ المشتريات -->
+    <div class="col-md-6 mb-4">
+        <div class="card shadow">
+            <div class="card-header bg-success text-white">
+                <h5 class="mb-0"><i class="fas fa-shopping-basket me-2"></i>تاريخ المشتريات</h5>
+            </div>
+            <div class="card-body">
+                {% if purchase_history %}
+                <div class="table-responsive">
+                    <table class="table table-hover">
+                        <thead>
+                            <tr>
+                                <th>التاريخ</th>
+                                <th>رقم الفاتورة</th>
+                                <th>المورد</th>
+                                <th>الكمية</th>
+                                <th>السعر</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for item in purchase_history %}
+                            <tr>
+                                <td>{{ item.purchase.purchase_date|date:"Y-m-d" }}</td>
+                                <td>
+                                    <a href="{% url 'parts_inventory:purchase_detail' item.purchase.id %}">
+                                        {{ item.purchase.invoice_number|default:item.purchase.id }}
+                                    </a>
+                                </td>
+                                <td>{{ item.purchase.supplier.name }}</td>
+                                <td>{{ item.quantity }}</td>
+                                <td>{{ item.unit_price }} جنيه مصري</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                {% else %}
+                <p class="text-center">لا يوجد تاريخ مشتريات لهذه القطعة</p>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

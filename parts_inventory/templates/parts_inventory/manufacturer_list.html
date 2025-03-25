@@ -1,0 +1,78 @@
+{% extends 'base.html' %}
+{% load static %}
+{% load i18n %}
+
+{% block title %}{% trans 'الشركات المصنعة' %}{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2>{% trans 'الشركات المصنعة' %}</h2>
+        <a href="{% url 'parts_inventory:manufacturer_create' %}" class="btn btn-primary">
+            <i class="fas fa-plus"></i> {% trans 'إضافة شركة مصنعة' %}
+        </a>
+    </div>
+
+    {% if messages %}
+    <div class="messages">
+        {% for message in messages %}
+        <div class="alert alert-{{ message.tags }}">
+            {{ message }}
+        </div>
+        {% endfor %}
+    </div>
+    {% endif %}
+
+    <div class="card">
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table table-hover">
+                    <thead>
+                        <tr>
+                            <th>{% trans 'الشعار' %}</th>
+                            <th>{% trans 'اسم الشركة' %}</th>
+                            <th>{% trans 'بلد المنشأ' %}</th>
+                            <th>{% trans 'الموقع الإلكتروني' %}</th>
+                            <th>{% trans 'الإجراءات' %}</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for manufacturer in manufacturers %}
+                        <tr>
+                            <td>
+                                {% if manufacturer.logo %}
+                                <img src="{{ manufacturer.logo.url }}" alt="{{ manufacturer.name }}" style="max-height: 50px;">
+                                {% else %}
+                                <span class="text-muted">{% trans 'لا يوجد شعار' %}</span>
+                                {% endif %}
+                            </td>
+                            <td>{{ manufacturer.name }}</td>
+                            <td>{{ manufacturer.country|default:'-' }}</td>
+                            <td>
+                                {% if manufacturer.website %}
+                                <a href="{{ manufacturer.website }}" target="_blank">{{ manufacturer.website }}</a>
+                                {% else %}
+                                -
+                                {% endif %}
+                            </td>
+                            <td>
+                                <a href="{% url 'parts_inventory:manufacturer_update' manufacturer.id %}" class="btn btn-sm btn-info">
+                                    <i class="fas fa-edit"></i>
+                                </a>
+                                <a href="{% url 'parts_inventory:manufacturer_delete' manufacturer.id %}" class="btn btn-sm btn-danger" onclick="return confirm('{% trans 'هل أنت متأكد من حذف هذه الشركة المصنعة؟' %}')">
+                                    <i class="fas fa-trash"></i>
+                                </a>
+                            </td>
+                        </tr>
+                        {% empty %}
+                        <tr>
+                            <td colspan="5" class="text-center">{% trans 'لا توجد شركات مصنعة' %}</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,47 @@
+{% extends 'base.html' %}
+{% load i18n %}
+
+{% block title %}{% trans 'حذف الترخيص' %}{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <div class="row justify-content-center">
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-header bg-danger text-white">
+                    <h4 class="mb-0">{% trans 'تأكيد حذف الترخيص' %}</h4>
+                </div>
+                <div class="card-body">
+                    <p class="mb-4">
+                        {% trans 'هل أنت متأكد من حذف الترخيص التالي؟' %}
+                    </p>
+                    <dl class="row">
+                        <dt class="col-sm-4">{% trans 'الشركة' %}</dt>
+                        <dd class="col-sm-8">{{ license.company_name }}</dd>
+
+                        <dt class="col-sm-4">{% trans 'مفتاح الترخيص' %}</dt>
+                        <dd class="col-sm-8">{{ license.license_key }}</dd>
+
+                        <dt class="col-sm-4">{% trans 'تاريخ البداية' %}</dt>
+                        <dd class="col-sm-8">{{ license.start_date }}</dd>
+
+                        <dt class="col-sm-4">{% trans 'تاريخ الانتهاء' %}</dt>
+                        <dd class="col-sm-8">{{ license.end_date }}</dd>
+                    </dl>
+                    <form method="post">
+                        {% csrf_token %}
+                        <div class="d-flex justify-content-between">
+                            <a href="{% url 'licensing:license_list' %}" class="btn btn-secondary">
+                                <i class="fas fa-arrow-left"></i> {% trans 'إلغاء' %}
+                            </a>
+                            <button type="submit" class="btn btn-danger">
+                                <i class="fas fa-trash"></i> {% trans 'حذف' %}
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

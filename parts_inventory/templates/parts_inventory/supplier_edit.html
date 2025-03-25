@@ -1,0 +1,96 @@
+{% extends 'base.html' %}
+
+{% block title %}تعديل بيانات المورد - نظام إدارة قطع غيار السيارات{% endblock %}
+
+{% block content %}
+<div class="row mb-4">
+    <div class="col-12">
+        <div class="card shadow">
+            <div class="card-header bg-warning text-dark">
+                <h5 class="mb-0"><i class="fas fa-edit me-2"></i>تعديل بيانات المورد</h5>
+            </div>
+            <div class="card-body">
+                <form method="post" class="needs-validation" novalidate>
+                    {% csrf_token %}
+                    
+                    <!-- معلومات المورد الأساسية -->
+                    <div class="row mb-4">
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="name" class="form-label">اسم الشركة <span class="text-danger">*</span></label>
+                                <input type="text" class="form-control" id="name" name="name" value="{{ form.name.value|default:'' }}" required>
+                                <div class="invalid-feedback">يرجى إدخال اسم الشركة</div>
+                            </div>
+                            <div class="mb-3">
+                                <label for="contact_person" class="form-label">الشخص المسؤول <span class="text-danger">*</span></label>
+                                <input type="text" class="form-control" id="contact_person" name="contact_person" value="{{ form.contact_person.value|default:'' }}" required>
+                                <div class="invalid-feedback">يرجى إدخال اسم الشخص المسؤول</div>
+                            </div>
+                            <div class="mb-3">
+                                <label for="tax_number" class="form-label">الرقم الضريبي</label>
+                                <input type="text" class="form-control" id="tax_number" name="tax_number" value="{{ form.tax_number.value|default:'' }}">
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="email" class="form-label">البريد الإلكتروني</label>
+                                <input type="email" class="form-control" id="email" name="email" value="{{ form.email.value|default:'' }}">
+                                <div class="invalid-feedback">يرجى إدخال بريد إلكتروني صحيح</div>
+                            </div>
+                            <div class="mb-3">
+                                <label for="phone" class="form-label">رقم الهاتف <span class="text-danger">*</span></label>
+                                <input type="tel" class="form-control" id="phone" name="phone" value="{{ form.phone.value|default:'' }}" required>
+                                <div class="invalid-feedback">يرجى إدخال رقم الهاتف</div>
+                            </div>
+                            <div class="mb-3">
+                                <label for="website" class="form-label">الموقع الإلكتروني</label>
+                                <input type="url" class="form-control" id="website" name="website" value="{{ form.website.value|default:'' }}">
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- العنوان -->
+                    <div class="row mb-4">
+                        <div class="col-12">
+                            <div class="mb-3">
+                                <label for="address" class="form-label">العنوان <span class="text-danger">*</span></label>
+                                <textarea class="form-control" id="address" name="address" rows="3" required>{{ form.address.value|default:'' }}</textarea>
+                                <div class="invalid-feedback">يرجى إدخال العنوان</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- ملاحظات -->
+                    <div class="mb-4">
+                        <label for="notes" class="form-label">ملاحظات</label>
+                        <textarea class="form-control" id="notes" name="notes" rows="3">{{ form.notes.value|default:'' }}</textarea>
+                    </div>
+
+                    <!-- أزرار التحكم -->
+                    <div class="text-end">
+                        <a href="{% url 'parts_inventory:suppliers_list' %}" class="btn btn-secondary">إلغاء</a>
+                        <button type="submit" class="btn btn-warning">حفظ التغييرات</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- سكريبت التحقق من صحة النموذج -->
+<script>
+(function () {
+    'use strict'
+    var forms = document.querySelectorAll('.needs-validation')
+    Array.prototype.slice.call(forms).forEach(function (form) {
+        form.addEventListener('submit', function (event) {
+            if (!form.checkValidity()) {
+                event.preventDefault()
+                event.stopPropagation()
+            }
+            form.classList.add('was-validated')
+        }, false)
+    })
+})()
+</script>
+{% endblock %}

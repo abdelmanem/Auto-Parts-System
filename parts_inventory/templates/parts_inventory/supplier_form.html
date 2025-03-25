@@ -1,0 +1,96 @@
+{% extends 'base.html' %}
+
+{% block title %}إضافة مورد جديد - نظام إدارة قطع غيار السيارات{% endblock %}
+
+{% block content %}
+<div class="row mb-4">
+    <div class="col-12">
+        <div class="card shadow">
+            <div class="card-header bg-primary text-white">
+                <h5 class="mb-0"><i class="fas fa-truck me-2"></i>إضافة مورد جديد</h5>
+            </div>
+            <div class="card-body">
+                <form method="post" class="needs-validation" novalidate>
+                    {% csrf_token %}
+                    
+                    <!-- معلومات المورد الأساسية -->
+                    <div class="row mb-4">
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="name" class="form-label">اسم الشركة <span class="text-danger">*</span></label>
+                                <input type="text" class="form-control" id="name" name="name" required>
+                                <div class="invalid-feedback">يرجى إدخال اسم الشركة</div>
+                            </div>
+                            <div class="mb-3">
+                                <label for="contact_person" class="form-label">الشخص المسؤول <span class="text-danger">*</span></label>
+                                <input type="text" class="form-control" id="contact_person" name="contact_person" required>
+                                <div class="invalid-feedback">يرجى إدخال اسم الشخص المسؤول</div>
+                            </div>
+                            <div class="mb-3">
+                                <label for="tax_number" class="form-label">الرقم الضريبي</label>
+                                <input type="text" class="form-control" id="tax_number" name="tax_number">
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="email" class="form-label">البريد الإلكتروني</label>
+                                <input type="email" class="form-control" id="email" name="email">
+                                <div class="invalid-feedback">يرجى إدخال بريد إلكتروني صحيح</div>
+                            </div>
+                            <div class="mb-3">
+                                <label for="phone" class="form-label">رقم الهاتف <span class="text-danger">*</span></label>
+                                <input type="tel" class="form-control" id="phone" name="phone" required>
+                                <div class="invalid-feedback">يرجى إدخال رقم الهاتف</div>
+                            </div>
+                            <div class="mb-3">
+                                <label for="website" class="form-label">الموقع الإلكتروني</label>
+                                <input type="url" class="form-control" id="website" name="website">
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- العنوان -->
+                    <div class="row mb-4">
+                        <div class="col-12">
+                            <div class="mb-3">
+                                <label for="address" class="form-label">العنوان <span class="text-danger">*</span></label>
+                                <textarea class="form-control" id="address" name="address" rows="3" required></textarea>
+                                <div class="invalid-feedback">يرجى إدخال العنوان</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- ملاحظات -->
+                    <div class="mb-4">
+                        <label for="notes" class="form-label">ملاحظات</label>
+                        <textarea class="form-control" id="notes" name="notes" rows="3"></textarea>
+                    </div>
+
+                    <!-- أزرار التحكم -->
+                    <div class="text-end">
+                        <button type="button" class="btn btn-secondary" onclick="history.back()">إلغاء</button>
+                        <button type="submit" class="btn btn-primary">حفظ</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- سكريبت التحقق من صحة النموذج -->
+<script>
+(function () {
+    'use strict'
+    var forms = document.querySelectorAll('.needs-validation')
+    Array.prototype.slice.call(forms).forEach(function (form) {
+        form.addEventListener('submit', function (event) {
+            if (!form.checkValidity()) {
+                event.preventDefault()
+                event.stopPropagation()
+            }
+            form.classList.add('was-validated')
+        }, false)
+    })
+})()
+</script>
+{% endblock %}

@@ -1,0 +1,258 @@
+{% extends 'base.html' %}
+
+{% block title %}{{ sale.invoice_number }} - تفاصيل عملية البيع{% endblock %}
+
+{% block content %}
+<div class="row mb-4">
+    <div class="col-12">
+        <nav aria-label="breadcrumb">
+            <ol class="breadcrumb">
+                <li class="breadcrumb-item"><a href="{% url 'parts_inventory:index' %}">الرئيسية</a></li>
+                <li class="breadcrumb-item"><a href="{% url 'parts_inventory:sales_list' %}">المبيعات</a></li>
+                <li class="breadcrumb-item active">{{ sale.invoice_number }}</li>
+            </ol>
+        </nav>
+    </div>
+</div>
+
+<div class="row">
+    <!-- معلومات عملية البيع -->
+    <div class="col-md-6">
+        <div class="card shadow mb-4">
+            <div class="card-header bg-primary text-white">
+                <h5 class="mb-0"><i class="fas fa-shopping-cart me-2"></i>معلومات عملية البيع</h5>
+            </div>
+            <div class="card-body">
+                <div class="row mb-3">
+                    <div class="col-md-6">
+                        <h6>رقم الفاتورة:</h6>
+                        <p class="fw-bold">{{ sale.invoice_number }}</p>
+                    </div>
+                    <div class="col-md-6">
+                        <h6>تاريخ البيع:</h6>
+                        <p>{{ sale.sale_date|date:"Y-m-d H:i" }}</p>
+                    </div>
+                </div>
+                
+                <div class="row mb-3">
+                    <div class="col-md-6">
+                        <h6>اسم العميل:</h6>
+                        <p>{{ sale.customer_name }}</p>
+                    </div>
+                    <div class="col-md-6">
+                        <h6>رقم هاتف العميل:</h6>
+                        <p>
+                            {% if sale.customer_phone %}
+                            <a href="tel:{{ sale.customer_phone }}">{{ sale.customer_phone }}</a>
+                            {% else %}
+                            غير محدد
+                            {% endif %}
+                        </p>
+                    </div>
+                </div>
+                
+                <div class="row mb-3">
+                    <div class="col-md-6">
+                        <h6>البريد الإلكتروني للعميل:</h6>
+                        <p>
+                            {% if sale.customer_email %}
+                            <a href="mailto:{{ sale.customer_email }}">{{ sale.customer_email }}</a>
+                            {% else %}
+                            غير محدد
+                            {% endif %}
+                        </p>
+                    </div>
+                    <div class="col-md-6">
+                        <h6>طريقة الدفع:</h6>
+                        <p>{{ sale.payment_method|default:"غير محدد" }}</p>
+                    </div>
+                </div>
+                
+                <div class="row mb-3">
+                    <div class="col-md-6">
+                        <h6>الحالة:</h6>
+                        <p>
+                            {% if sale.status == 'completed' %}
+                            <span class="badge bg-success">{{ sale.get_status_display }}</span>
+                            {% elif sale.status == 'pending' %}
+                            <span class="badge bg-warning">{{ sale.get_status_display }}</span>
+                            {% else %}
+                            <span class="badge bg-danger">{{ sale.get_status_display }}</span>
+                            {% endif %}
+                        </p>
+                    </div>
+                    <div class="col-md-6">
+                        <h6>تم الإنشاء بواسطة:</h6>
+                        <p>{{ sale.created_by.username|default:"غير محدد" }}</p>
+                    </div>
+                </div>
+                
+                <div class="mb-3">
+                    <h6>ملاحظات:</h6>
+                    <p>{{ sale.notes|default:"لا توجد ملاحظات"|linebreaks }}</p>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- ملخص المبلغ -->
+    <div class="col-md-6">
+        <div class="card shadow mb-4">
+            <div class="card-header bg-success text-white">
+                <h5 class="mb-0"><i class="fas fa-money-bill-wave me-2"></i>ملخص المبلغ</h5>
+            </div>
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table table-borderless">
+                        <tbody>
+                            <tr>
+                                <th>المبلغ الإجمالي:</th>
+                                <td class="text-end">{{ sale.total_amount }} جنيه مصري</td>
+                            </tr>
+                            <tr>
+                                <th>الخصم:</th>
+                                <td class="text-end">{{ sale.discount }} جنيه مصري</td>
+                            </tr>
+                            <tr>
+                                <th>الضريبة:</th>
+                                <td class="text-end">{{ sale.tax }} جنيه مصري</td>
+                            </tr>
+                            <tr class="table-active fw-bold">
+                                <th>المبلغ النهائي:</th>
+                                <td class="text-end text-primary fs-4">{{ sale.final_amount }} جنيه مصري</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+                
+                <div class="d-grid gap-2 mt-3">
+                    <button class="btn btn-outline-primary" onclick="window.print()">
+                        <i class="fas fa-print me-2"></i>طباعة الفاتورة
+                    </button>
+                </div>
+            </div>
+        </div>
+        
+        <div class="card shadow mb-4">
+            <div class="card-header bg-info text-white">
+                <h5 class="mb-0"><i class="fas fa-info-circle me-2"></i>معلومات إضافية</h5>
+            </div>
+            <div class="card-body">
+                <ul class="list-group list-group-flush">
+                    <li class="list-group-item d-flex justify-content-between align-items-center">
+                        تاريخ الإنشاء
+                        <span>{{ sale.created_at|date:"Y-m-d H:i" }}</span>
+                    </li>
+                    <li class="list-group-item d-flex justify-content-between align-items-center">
+                        آخر تحديث
+                        <span>{{ sale.updated_at|date:"Y-m-d H:i" }}</span>
+                    </li>
+                    <li class="list-group-item d-flex justify-content-between align-items-center">
+                        عدد العناصر
+                        <span class="badge bg-primary rounded-pill">{{ items.count }}</span>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- عناصر عملية البيع -->
+<div class="row">
+    <div class="col-12 mb-4">
+        <div class="card shadow">
+            <div class="card-header bg-primary text-white">
+                <h5 class="mb-0"><i class="fas fa-list me-2"></i>عناصر عملية البيع</h5>
+            </div>
+            <div class="card-body">
+                {% if items %}
+                <div class="table-responsive">
+                    <table class="table table-hover">
+                        <thead>
+                            <tr>
+                                <th>#</th>
+                                <th>اسم القطعة</th>
+                                <th>رقم القطعة</th>
+                                <th>الكمية</th>
+                                <th>سعر الوحدة</th>
+                                <th>السعر الإجمالي</th>
+                                <th>ملاحظات</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for item in items %}
+                            <tr>
+                                <td>{{ forloop.counter }}</td>
+                                <td>
+                                    <a href="{% url 'parts_inventory:part_detail' item.part.id %}">
+                                        {{ item.part.name }}
+                                    </a>
+                                </td>
+                                <td>{{ item.part.part_number }}</td>
+                                <td>{{ item.quantity }}</td>
+                                <td>{{ item.unit_price }} جنيه مصري</td>
+                                <td>{{ item.total_price }} جنيه مصري</td>
+                                <td>{{ item.notes|default:"-" }}</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                {% else %}
+                <div class="alert alert-info">
+                    <i class="fas fa-info-circle me-2"></i>لا توجد عناصر لهذه العملية.
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- تنسيق للطباعة -->
+<style type="text/css" media="print">
+    @media print {
+        .navbar, .breadcrumb, footer, .btn, .no-print {
+            display: none !important;
+        }
+        
+        .card {
+            border: none !important;
+            box-shadow: none !important;
+        }
+        
+        .card-header {
+            background-color: #f8f9fa !important;
+            color: #000 !important;
+            border-bottom: 1px solid #dee2e6 !important;
+        }
+        
+        body {
+            font-size: 12pt;
+            color: #000;
+            background-color: #fff;
+        }
+        
+        a {
+            text-decoration: none !important;
+            color: #000 !important;
+        }
+        
+        .badge {
+            border: 1px solid #000 !important;
+            color: #000 !important;
+            background-color: transparent !important;
+        }
+        
+        .table {
+            width: 100% !important;
+        }
+        
+        .container {
+            width: 100% !important;
+            max-width: 100% !important;
+            padding: 0 !important;
+            margin: 0 !important;
+        }
+    }
+</style>
+{% endblock %}

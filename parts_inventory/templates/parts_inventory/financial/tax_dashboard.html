@@ -1,0 +1,247 @@
+{% extends 'base.html' %}
+
+{% block title %}لوحة تحكم الضرائب{% endblock %}
+
+{% block content %}
+<div class="row mb-4">
+    <div class="col-12">
+        <nav aria-label="breadcrumb">
+            <ol class="breadcrumb">
+                <li class="breadcrumb-item"><a href="{% url 'parts_inventory:index' %}">الرئيسية</a></li>
+                <li class="breadcrumb-item"><a href="{% url 'parts_inventory:financial:dashboard' %}">النظام المالي</a></li>
+                <li class="breadcrumb-item active">نظام الضرائب</li>
+            </ol>
+        </nav>
+    </div>
+</div>
+
+<div class="row mb-4">
+    <div class="col-12">
+        <h2 class="mb-3"><i class="fas fa-file-invoice-dollar me-2"></i>لوحة تحكم الضرائب</h2>
+        <p class="text-muted">إدارة ومتابعة الضرائب على المبيعات والمشتريات وإنشاء التقارير الضريبية</p>
+    </div>
+</div>
+
+<!-- بطاقات الإحصائيات -->
+<div class="row mb-4">
+    <div class="col-md-3">
+        <div class="card shadow-sm border-primary h-100">
+            <div class="card-body">
+                <h5 class="card-title">ضرائب المبيعات (الشهر الحالي)</h5>
+                <h3 class="text-primary">{{ current_month_sales_tax|floatformat:2 }} ج.م</h3>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card shadow-sm border-success h-100">
+            <div class="card-body">
+                <h5 class="card-title">ضرائب المشتريات (الشهر الحالي)</h5>
+                <h3 class="text-success">{{ current_month_purchase_tax|floatformat:2 }} ج.م</h3>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card shadow-sm border-danger h-100">
+            <div class="card-body">
+                <h5 class="card-title">ضرائب مبيعات غير مدفوعة</h5>
+                <h3 class="text-danger">{{ unpaid_sales_tax|floatformat:2 }} ج.م</h3>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card shadow-sm border-info h-100">
+            <div class="card-body">
+                <h5 class="card-title">الضريبة المستحقة (الشهر الحالي)</h5>
+                <h3 class="{% if tax_due > 0 %}text-danger{% else %}text-success{% endif %}">{{ tax_due|floatformat:2 }} ج.م</h3>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <!-- آخر التقارير الضريبية -->
+    <div class="col-md-6 mb-4">
+        <div class="card shadow-sm h-100">
+            <div class="card-header bg-primary text-white">
+                <h5 class="mb-0"><i class="fas fa-file-alt me-2"></i>آخر التقارير الضريبية</h5>
+            </div>
+            <div class="card-body">
+                {% if recent_tax_reports %}
+                <div class="table-responsive">
+                    <table class="table table-hover">
+                        <thead>
+                            <tr>
+                                <th>الفترة</th>
+                                <th>النوع</th>
+                                <th>الحالة</th>
+                                <th>الضريبة المستحقة</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for report in recent_tax_reports %}
+                            <tr>
+                                <td>{{ report.start_date|date:"d/m/Y" }} - {{ report.end_date|date:"d/m/Y" }}</td>
+                                <td>{{ report.get_report_type_display }}</td>
+                                <td>
+                                    {% if report.status == 'draft' %}
+                                    <span class="badge bg-secondary">مسودة</span>
+                                    {% elif report.status == 'submitted' %}
+                                    <span class="badge bg-primary">تم التقديم</span>
+                                    {% elif report.status == 'accepted' %}
+                                    <span class="badge bg-success">مقبول</span>
+                                    {% elif report.status == 'rejected' %}
+                                    <span class="badge bg-danger">مرفوض</span>
+                                    {% endif %}
+                                </td>
+                                <td>{{ report.tax_due|floatformat:2 }} ج.م</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                <div class="text-center mt-3">
+                    <a href="{% url 'parts_inventory:financial:tax_reports_list' %}" class="btn btn-outline-primary">عرض جميع التقارير</a>
+                    <a href="{% url 'parts_inventory:financial:generate_tax_report' %}" class="btn btn-primary">إنشاء تقرير جديد</a>
+                </div>
+                {% else %}
+                <div class="text-center py-4">
+                    <p class="text-muted">لا توجد تقارير ضريبية حتى الآن</p>
+                    <a href="{% url 'parts_inventory:financial:generate_tax_report' %}" class="btn btn-primary">إنشاء تقرير جديد</a>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+    
+    <!-- آخر ضرائب المبيعات -->
+    <div class="col-md-6 mb-4">
+        <div class="card shadow-sm h-100">
+            <div class="card-header bg-success text-white">
+                <h5 class="mb-0"><i class="fas fa-shopping-cart me-2"></i>آخر ضرائب المبيعات</h5>
+            </div>
+            <div class="card-body">
+                {% if recent_sales_taxes %}
+                <div class="table-responsive">
+                    <table class="table table-hover">
+                        <thead>
+                            <tr>
+                                <th>رقم الفاتورة</th>
+                                <th>المبلغ</th>
+                                <th>معدل الضريبة</th>
+                                <th>الحالة</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for tax in recent_sales_taxes %}
+                            <tr>
+                                <td>{{ tax.sale.invoice_number }}</td>
+                                <td>{{ tax.tax_amount|floatformat:2 }} ج.م</td>
+                                <td>{{ tax.tax_rate.rate }}%</td>
+                                <td>
+                                    {% if tax.is_paid %}
+                                    <span class="badge bg-success">تم الدفع</span>
+                                    {% else %}
+                                    <span class="badge bg-warning text-dark">غير مدفوع</span>
+                                    {% endif %}
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                <div class="text-center mt-3">
+                    <a href="{% url 'parts_inventory:financial:sales_taxes_list' %}" class="btn btn-outline-success">عرض جميع ضرائب المبيعات</a>
+                </div>
+                {% else %}
+                <div class="text-center py-4">
+                    <p class="text-muted">لا توجد ضرائب مبيعات حتى الآن</p>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <!-- آخر ضرائب المشتريات -->
+    <div class="col-md-6 mb-4">
+        <div class="card shadow-sm h-100">
+            <div class="card-header bg-info text-white">
+                <h5 class="mb-0"><i class="fas fa-shopping-basket me-2"></i>آخر ضرائب المشتريات</h5>
+            </div>
+            <div class="card-body">
+                {% if recent_purchase_taxes %}
+                <div class="table-responsive">
+                    <table class="table table-hover">
+                        <thead>
+                            <tr>
+                                <th>رقم المرجع</th>
+                                <th>المبلغ</th>
+                                <th>معدل الضريبة</th>
+                                <th>قابل للخصم</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for tax in recent_purchase_taxes %}
+                            <tr>
+                                <td>{{ tax.purchase.reference_number }}</td>
+                                <td>{{ tax.tax_amount|floatformat:2 }} ج.م</td>
+                                <td>{{ tax.tax_rate.rate }}%</td>
+                                <td>
+                                    {% if tax.is_deductible %}
+                                    <span class="badge bg-success">نعم</span>
+                                    {% else %}
+                                    <span class="badge bg-danger">لا</span>
+                                    {% endif %}
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                <div class="text-center mt-3">
+                    <a href="{% url 'parts_inventory:financial:purchase_taxes_list' %}" class="btn btn-outline-info">عرض جميع ضرائب المشتريات</a>
+                </div>
+                {% else %}
+                <div class="text-center py-4">
+                    <p class="text-muted">لا توجد ضرائب مشتريات حتى الآن</p>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+    
+    <!-- معدلات الضرائب -->
+    <div class="col-md-6 mb-4">
+        <div class="card shadow-sm h-100">
+            <div class="card-header bg-warning text-dark">
+                <h5 class="mb-0"><i class="fas fa-percentage me-2"></i>إدارة معدلات الضرائب</h5>
+            </div>
+            <div class="card-body">
+                <div class="d-grid gap-2">
+                    <a href="{% url 'parts_inventory:financial:tax_rates_list' %}" class="btn btn-outline-warning">عرض وإدارة معدلات الضرائب</a>
+                </div>
+                <hr>
+                <div class="row">
+                    <div class="col-md-6">
+                        <div class="card bg-light">
+                            <div class="card-body text-center">
+                                <h5>ضرائب المبيعات</h5>
+                                <a href="{% url 'parts_inventory:financial:sales_taxes_list' %}" class="btn btn-sm btn-outline-primary mt-2">إدارة</a>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="card bg-light">
+                            <div class="card-body text-center">
+                                <h5>ضرائب المشتريات</h5>
+                                <a href="{% url 'parts_inventory:financial:purchase_taxes_list' %}" class="btn btn-sm btn-outline-primary mt-2">إدارة</a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

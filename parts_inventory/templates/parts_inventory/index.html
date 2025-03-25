@@ -1,0 +1,215 @@
+{% extends 'base.html' %}
+
+{% block title %}الصفحة الرئيسية - نظام إدارة قطع غيار السيارات{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-12 mb-4">
+        <div class="card shadow">
+            <div class="card-body">
+                <h2 class="card-title text-center mb-4">مرحباً بك في نظام إدارة قطع غيار السيارات</h2>
+                <p class="lead text-center">نظام متكامل لإدارة مخزون قطع غيار السيارات والمبيعات والمشتريات</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <!-- إحصائيات سريعة -->
+    <div class="col-md-3 mb-4">
+        <div class="card bg-primary text-white shadow">
+            <div class="card-body">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <h5 class="card-title">قطع الغيار</h5>
+                        <h2 class="display-6">{{ total_parts }}</h2>
+                    </div>
+                    <i class="fas fa-cogs fa-3x opacity-50"></i>
+                </div>
+            </div>
+            <div class="card-footer bg-primary-dark d-flex justify-content-between align-items-center">
+                <span>عرض التفاصيل</span>
+                <a href="{% url 'parts_inventory:parts_list' %}" class="text-white">
+                    <i class="fas fa-arrow-circle-left"></i>
+                </a>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-3 mb-4">
+        <div class="card bg-warning text-white shadow">
+            <div class="card-body">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <h5 class="card-title">مخزون منخفض</h5>
+                        <h2 class="display-6">{{ low_stock_parts }}</h2>
+                    </div>
+                    <i class="fas fa-exclamation-triangle fa-3x opacity-50"></i>
+                </div>
+            </div>
+            <div class="card-footer bg-warning-dark d-flex justify-content-between align-items-center">
+                <span>عرض التفاصيل</span>
+                <a href="{% url 'parts_inventory:parts_list' %}?low_stock=1" class="text-white">
+                    <i class="fas fa-arrow-circle-left"></i>
+                </a>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-3 mb-4">
+        <div class="card bg-success text-white shadow">
+            <div class="card-body">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <h5 class="card-title">الشركات المصنعة</h5>
+                        <h2 class="display-6">{{ total_manufacturers }}</h2>
+                    </div>
+                    <i class="fas fa-industry fa-3x opacity-50"></i>
+                </div>
+            </div>
+            <div class="card-footer bg-success-dark d-flex justify-content-between align-items-center">
+                <span>عرض التفاصيل</span>
+                <a href="#" class="text-white">
+                    <i class="fas fa-arrow-circle-left"></i>
+                </a>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-3 mb-4">
+        <div class="card bg-info text-white shadow">
+            <div class="card-body">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <h5 class="card-title">الموردين</h5>
+                        <h2 class="display-6">{{ total_suppliers }}</h2>
+                    </div>
+                    <i class="fas fa-truck fa-3x opacity-50"></i>
+                </div>
+            </div>
+            <div class="card-footer bg-info-dark d-flex justify-content-between align-items-center">
+                <span>عرض التفاصيل</span>
+                <a href="{% url 'parts_inventory:suppliers_list' %}" class="text-white">
+                    <i class="fas fa-arrow-circle-left"></i>
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <!-- آخر المبيعات -->
+    <div class="col-md-6 mb-4">
+        <div class="card shadow">
+            <div class="card-header bg-primary text-white">
+                <h5 class="mb-0"><i class="fas fa-shopping-cart me-2"></i>آخر المبيعات</h5>
+            </div>
+            <div class="card-body">
+                {% if recent_sales %}
+                <div class="table-responsive">
+                    <table class="table table-hover">
+                        <thead>
+                            <tr>
+                                <th>رقم الفاتورة</th>
+                                <th>العميل</th>
+                                <th>التاريخ</th>
+                                <th>المبلغ</th>
+                                <th>الحالة</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for sale in recent_sales %}
+                            <tr>
+                                <td>
+                                    <a href="{% url 'parts_inventory:sale_detail' sale.id %}">
+                                        {{ sale.invoice_number }}
+                                    </a>
+                                </td>
+                                <td>{{ sale.customer_name }}</td>
+                                <td>{{ sale.sale_date|date:"Y-m-d" }}</td>
+                                <td>{{ sale.final_amount }} جنيه مصري</td>
+                                <td>
+                                    {% if sale.status == 'completed' %}
+                                    <span class="badge bg-success">{{ sale.get_status_display }}</span>
+                                    {% elif sale.status == 'pending' %}
+                                    <span class="badge bg-warning">{{ sale.get_status_display }}</span>
+                                    {% else %}
+                                    <span class="badge bg-danger">{{ sale.get_status_display }}</span>
+                                    {% endif %}
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                {% else %}
+                <p class="text-center">لا توجد مبيعات حديثة</p>
+                {% endif %}
+            </div>
+            <div class="card-footer text-end">
+                <a href="{% url 'parts_inventory:sales_list' %}" class="btn btn-sm btn-primary">
+                    عرض جميع المبيعات <i class="fas fa-arrow-circle-left ms-1"></i>
+                </a>
+            </div>
+        </div>
+    </div>
+    
+    <!-- آخر المشتريات -->
+    <div class="col-md-6 mb-4">
+        <div class="card shadow">
+            <div class="card-header bg-success text-white">
+                <h5 class="mb-0"><i class="fas fa-shopping-basket me-2"></i>آخر المشتريات</h5>
+            </div>
+            <div class="card-body">
+                {% if recent_purchases %}
+                <div class="table-responsive">
+                    <table class="table table-hover">
+                        <thead>
+                            <tr>
+                                <th>رقم الفاتورة</th>
+                                <th>المورد</th>
+                                <th>التاريخ</th>
+                                <th>المبلغ</th>
+                                <th>الحالة</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for purchase in recent_purchases %}
+                            <tr>
+                                <td>
+                                    <a href="{% url 'parts_inventory:purchase_detail' purchase.id %}">
+                                        {{ purchase.invoice_number|default:purchase.id }}
+                                    </a>
+                                </td>
+                                <td>{{ purchase.supplier.name }}</td>
+                                <td>{{ purchase.purchase_date|date:"Y-m-d" }}</td>
+                                <td>{{ purchase.total_amount }} جنيه مصري</td>
+                                <td>
+                                    {% if purchase.status == 'received' %}
+                                    <span class="badge bg-success">{{ purchase.get_status_display }}</span>
+                                    {% elif purchase.status == 'ordered' %}
+                                    <span class="badge bg-primary">{{ purchase.get_status_display }}</span>
+                                    {% elif purchase.status == 'pending' %}
+                                    <span class="badge bg-warning">{{ purchase.get_status_display }}</span>
+                                    {% else %}
+                                    <span class="badge bg-danger">{{ purchase.get_status_display }}</span>
+                                    {% endif %}
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                {% else %}
+                <p class="text-center">لا توجد مشتريات حديثة</p>
+                {% endif %}
+            </div>
+            <div class="card-footer text-end">
+                <a href="{% url 'parts_inventory:purchases_list' %}" class="btn btn-sm btn-success">
+                    عرض جميع المشتريات <i class="fas fa-arrow-circle-left ms-1"></i>
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,193 @@
+{% extends 'base.html' %}
+
+{% block title %}قائمة قطع الغيار - نظام إدارة قطع غيار السيارات{% endblock %}
+
+{% block content %}
+<div class="row mb-4">
+    <div class="col-12">
+        <div class="card shadow">
+            <div class="card-header bg-primary text-white">
+                <h5 class="mb-0"><i class="fas fa-cogs me-2"></i>قائمة قطع الغيار</h5>
+            </div>
+            <div class="card-body">
+                <!-- نموذج البحث والفلترة -->
+                <form method="get" class="search-form mb-4">
+                    <div class="row g-3">
+                        <div class="col-md-3">
+                            <div class="input-group">
+                                <input type="text" name="q" class="form-control" placeholder="ابحث عن قطعة غيار..." value="{{ query }}">
+                                <button type="submit" class="btn btn-primary">
+                                    <i class="fas fa-search"></i>
+                                </button>
+                            </div>
+                        </div>
+                        <div class="col-md-2">
+                            <select name="category" class="form-select">
+                                <option value="">-- جميع الفئات --</option>
+                                {% for category in categories %}
+                                <option value="{{ category.id }}" {% if selected_category == category.id|stringformat:"i" %}selected{% endif %}>
+                                    {{ category.name }}
+                                </option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div class="col-md-2">
+                            <select name="manufacturer" class="form-select">
+                                <option value="">-- جميع الشركات المصنعة --</option>
+                                {% for manufacturer in manufacturers %}
+                                <option value="{{ manufacturer.id }}" {% if selected_manufacturer == manufacturer.id|stringformat:"i" %}selected{% endif %}>
+                                    {{ manufacturer.name }}
+                                </option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div class="col-md-2">
+                            <select name="condition" class="form-select">
+                                <option value="">-- جميع الحالات --</option>
+                                <option value="new" {% if selected_condition == 'new' %}selected{% endif %}>جديد</option>
+                                <option value="used" {% if selected_condition == 'used' %}selected{% endif %}>مستعمل</option>
+                                <option value="refurbished" {% if selected_condition == 'refurbished' %}selected{% endif %}>مجدد</option>
+                            </select>
+                        </div>
+                        <div class="col-md-2">
+                            <select name="stock_status" class="form-select">
+                                <option value="">-- حالة المخزون --</option>
+                                <option value="low" {% if selected_stock_status == 'low' %}selected{% endif %}>المخزون المنخفض</option>
+                                <option value="normal" {% if selected_stock_status == 'normal' %}selected{% endif %}>المخزون العادي</option>
+                            </select>
+                        </div>
+                    </div>
+                </form>
+                
+                <!-- جدول قطع الغيار -->
+                {% if page_obj %}
+                <div class="table-responsive">
+                    <table class="table table-hover">
+                        <thead>
+                            <tr>
+                                <th>
+                                    <a href="?{% if sort_by == 'name' %}-{% endif %}name{% if query %}&q={{ query }}{% endif %}{% if selected_category %}&category={{ selected_category }}{% endif %}{% if selected_manufacturer %}&manufacturer={{ selected_manufacturer }}{% endif %}{% if selected_condition %}&condition={{ selected_condition }}{% endif %}{% if selected_stock_status %}&stock_status={{ selected_stock_status }}{% endif %}">
+                                        اسم القطعة
+                                        {% if sort_field == 'name' %}
+                                            <i class="fas fa-sort-{% if sort_by == 'name' %}down{% else %}up{% endif %}"></i>
+                                        {% endif %}
+                                    </a>
+                                </th>
+                                <th>رقم القطعة</th>
+                                <th>الفئة</th>
+                                <th>الشركة المصنعة</th>
+                                <th>
+                                    <a href="?{% if sort_by == 'price' %}-{% endif %}price{% if query %}&q={{ query }}{% endif %}{% if selected_category %}&category={{ selected_category }}{% endif %}{% if selected_manufacturer %}&manufacturer={{ selected_manufacturer }}{% endif %}{% if selected_condition %}&condition={{ selected_condition }}{% endif %}{% if selected_stock_status %}&stock_status={{ selected_stock_status }}{% endif %}">
+                                        السعر
+                                        {% if sort_field == 'price' %}
+                                            <i class="fas fa-sort-{% if sort_by == 'price' %}down{% else %}up{% endif %}"></i>
+                                        {% endif %}
+                                    </a>
+                                </th>
+                                <th>
+                                    <a href="?{% if sort_by == 'stock_quantity' %}-{% endif %}stock_quantity{% if query %}&q={{ query }}{% endif %}{% if selected_category %}&category={{ selected_category }}{% endif %}{% if selected_manufacturer %}&manufacturer={{ selected_manufacturer }}{% endif %}{% if selected_condition %}&condition={{ selected_condition }}{% endif %}{% if selected_stock_status %}&stock_status={{ selected_stock_status }}{% endif %}">
+                                        المخزون
+                                        {% if sort_field == 'stock_quantity' %}
+                                            <i class="fas fa-sort-{% if sort_by == 'stock_quantity' %}down{% else %}up{% endif %}"></i>
+                                        {% endif %}
+                                    </a>
+                                </th>
+                                <th>الحالة</th>
+                                <th>الإجراءات</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for part in page_obj %}
+                            <tr {% if part.is_low_stock %}class="table-warning"{% endif %}>
+                                <td>
+                                    <a href="{% url 'parts_inventory:part_detail' part.id %}">
+                                        {{ part.name }}
+                                    </a>
+                                </td>
+                                <td>{{ part.part_number }}</td>
+                                <td>{{ part.category.name }}</td>
+                                <td>{{ part.manufacturer.name }}</td>
+                                <td>{{ part.price }} جنيه مصري</td>
+                                <td>
+                                    {% if part.is_low_stock %}
+                                    <span class="badge bg-warning">{{ part.stock_quantity }} (منخفض)</span>
+                                    {% else %}
+                                    <span class="badge bg-success">{{ part.stock_quantity }}</span>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    {% if part.condition == 'new' %}
+                                    <span class="badge bg-primary">جديد</span>
+                                    {% elif part.condition == 'used' %}
+                                    <span class="badge bg-secondary">مستعمل</span>
+                                    {% else %}
+                                    <span class="badge bg-info">مجدد</span>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    <a href="{% url 'parts_inventory:part_detail' part.id %}" class="btn btn-sm btn-info" title="عرض التفاصيل">
+                                        <i class="fas fa-eye"></i>
+                                    </a>
+                                    <a href="{% url 'parts_inventory:part_edit' part.id %}" class="btn btn-sm btn-warning" title="تعديل">
+                                        <i class="fas fa-edit"></i>
+                                    </a>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                
+                <!-- ترقيم الصفحات -->
+                {% if page_obj.has_other_pages %}
+                <nav aria-label="Page navigation" class="mt-4">
+                    <ul class="pagination justify-content-center">
+                        {% if page_obj.has_previous %}
+                        <li class="page-item">
+                            <a class="page-link" href="?page=1{% if query %}&q={{ query }}{% endif %}{% if selected_category %}&category={{ selected_category }}{% endif %}{% if selected_manufacturer %}&manufacturer={{ selected_manufacturer }}{% endif %}{% if selected_condition %}&condition={{ selected_condition }}{% endif %}{% if selected_stock_status %}&stock_status={{ selected_stock_status }}{% endif %}{% if sort_by %}&sort={{ sort_by }}{% endif %}" aria-label="First">
+                                <span aria-hidden="true">&laquo;&laquo;</span>
+                            </a>
+                        </li>
+                        <li class="page-item">
+                            <a class="page-link" href="?page={{ page_obj.previous_page_number }}{% if query %}&q={{ query }}{% endif %}{% if selected_category %}&category={{ selected_category }}{% endif %}{% if selected_manufacturer %}&manufacturer={{ selected_manufacturer }}{% endif %}{% if selected_condition %}&condition={{ selected_condition }}{% endif %}{% if selected_stock_status %}&stock_status={{ selected_stock_status }}{% endif %}{% if sort_by %}&sort={{ sort_by }}{% endif %}" aria-label="Previous">
+                                <span aria-hidden="true">&laquo;</span>
+                            </a>
+                        </li>
+                        {% endif %}
+                        
+                        {% for num in page_obj.paginator.page_range %}
+                            {% if page_obj.number == num %}
+                            <li class="page-item active"><span class="page-link">{{ num }}</span></li>
+                            {% elif num > page_obj.number|add:'-3' and num < page_obj.number|add:'3' %}
+                            <li class="page-item">
+                                <a class="page-link" href="?page={{ num }}{% if query %}&q={{ query }}{% endif %}{% if selected_category %}&category={{ selected_category }}{% endif %}{% if selected_manufacturer %}&manufacturer={{ selected_manufacturer }}{% endif %}{% if selected_condition %}&condition={{ selected_condition }}{% endif %}{% if selected_stock_status %}&stock_status={{ selected_stock_status }}{% endif %}{% if sort_by %}&sort={{ sort_by }}{% endif %}">{{ num }}</a>
+                            </li>
+                            {% endif %}
+                        {% endfor %}
+                        
+                        {% if page_obj.has_next %}
+                        <li class="page-item">
+                            <a class="page-link" href="?page={{ page_obj.next_page_number }}{% if query %}&q={{ query }}{% endif %}{% if selected_category %}&category={{ selected_category }}{% endif %}{% if selected_manufacturer %}&manufacturer={{ selected_manufacturer }}{% endif %}{% if selected_condition %}&condition={{ selected_condition }}{% endif %}{% if selected_stock_status %}&stock_status={{ selected_stock_status }}{% endif %}{% if sort_by %}&sort={{ sort_by }}{% endif %}" aria-label="Next">
+                                <span aria-hidden="true">&raquo;</span>
+                            </a>
+                        </li>
+                        <li class="page-item">
+                            <a class="page-link" href="?page={{ page_obj.paginator.num_pages }}{% if query %}&q={{ query }}{% endif %}{% if selected_category %}&category={{ selected_category }}{% endif %}{% if selected_manufacturer %}&manufacturer={{ selected_manufacturer }}{% endif %}{% if selected_condition %}&condition={{ selected_condition }}{% endif %}{% if selected_stock_status %}&stock_status={{ selected_stock_status }}{% endif %}{% if sort_by %}&sort={{ sort_by }}{% endif %}" aria-label="Last">
+                                <span aria-hidden="true">&raquo;&raquo;</span>
+                            </a>
+                        </li>
+                        {% endif %}
+                    </ul>
+                </nav>
+                {% endif %}
+                
+                {% else %}
+                <div class="alert alert-info">
+                    <i class="fas fa-info-circle me-2"></i>لا توجد قطع غيار متطابقة مع معايير البحث.
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

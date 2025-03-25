@@ -1,0 +1,118 @@
+<div class="modal fade" id="addManufacturerModal" tabindex="-1" aria-labelledby="addManufacturerModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="addManufacturerModalLabel">إضافة شركة مصنعة جديدة</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <form id="manufacturerForm" method="post" action="{% url 'parts_inventory:manufacturer_create_ajax' %}">
+                    {% csrf_token %}
+                    <div class="mb-3">
+                        <label for="name" class="form-label">اسم الشركة <span class="text-danger">*</span></label>
+                        <input type="text" class="form-control" id="name" name="name" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="country" class="form-label">بلد المنشأ</label>
+                        <input type="text" class="form-control" id="country" name="country">
+                    </div>
+                    <div class="mb-3">
+                        <label for="website" class="form-label">الموقع الإلكتروني</label>
+                        <input type="url" class="form-control" id="website" name="website">
+                    </div>
+                    <div class="mb-3">
+                        <label for="description" class="form-label">الوصف</label>
+                        <textarea class="form-control" id="description" name="description" rows="3"></textarea>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">إلغاء</button>
+                <button type="button" class="btn btn-primary" id="saveManufacturer">حفظ</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+$(document).ready(function() {
+    var form = $('#manufacturerForm');
+    var saveButton = $('#saveManufacturer');
+    var nameInput = $('#name');
+    var errorDiv = $('<div class="alert alert-danger d-none" role="alert"></div>');
+    form.prepend(errorDiv);
+
+    // التحقق من صحة النموذج
+    function validateForm() {
+        var name = nameInput.val().trim();
+        if (!name) {
+            showError('اسم الشركة المصنعة مطلوب');
+            return false;
+        }
+        return true;
+    }
+
+    // عرض رسالة الخطأ
+    function showError(message) {
+        errorDiv.text(message).removeClass('d-none');
+    }
+
+    // إخفاء رسالة الخطأ
+    function hideError() {
+        errorDiv.addClass('d-none');
+    }
+
+    // معالجة النقر على زر الحفظ
+    saveButton.click(function() {
+        hideError();
+        if (!validateForm()) {
+            return;
+        }
+
+        saveButton.prop('disabled', true);
+        
+        $.ajax({
+            url: form.attr('action'),
+            type: 'POST',
+            data: form.serialize(),
+            success: function(response) {
+                if (response.success) {
+                    // إضافة الشركة المصنعة الجديدة إلى القائمة المنسدلة
+                    var option = new Option(response.manufacturer.name, response.manufacturer.id, true, true);
+                    $('#manufacturer').append(option).trigger('change');
+                    
+                    // إغلاق النافذة المنبثقة
+                    $('#addManufacturerModal').modal('hide');
+                    
+                    // تنظيف النموذج
+                    form[0].reset();
+                    hideError();
+                    
+                    // عرض رسالة نجاح
+                    toastr.success('تم إضافة الشركة المصنعة بنجاح');
+                } else {
+                    showError(response.error || 'حدث خطأ أثناء إضافة الشركة المصنعة');
+                    toastr.error(response.error || 'حدث خطأ أثناء إضافة الشركة المصنعة');
+                }
+            },
+            error: function(xhr) {
+                var errorMessage = 'حدث خطأ أثناء إضافة الشركة المصنعة';
+                if (xhr.responseJSON && xhr.responseJSON.error) {
+                    errorMessage = xhr.responseJSON.error;
+                }
+                showError(errorMessage);
+                toastr.error(errorMessage);
+            },
+            complete: function() {
+                saveButton.prop('disabled', false);
+            }
+        });
+    });
+
+    // إخفاء رسالة الخطأ عند إغلاق النافذة المنبثقة
+    $('#addManufacturerModal').on('hidden.bs.modal', function() {
+        form[0].reset();
+        hideError();
+    });
+});
+</script>
